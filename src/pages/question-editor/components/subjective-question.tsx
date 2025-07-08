@@ -6,31 +6,26 @@ import { AiOutlinePlus } from "react-icons/ai";
 import { GrFormViewHide } from "react-icons/gr";
 import type { BaseQuestionData } from "./question-preview";
 import type { QuestionType } from "./types";
-
 export type ActiveEditor =
   | "question"
   | "questionDescription"
   | "correctAnswer"
   | "correctAnswerDescription"
   | null;
-
 export interface EditorState {
   activeEditor: ActiveEditor;
   questionType: QuestionType;
 }
-
 export interface QuestionComponentProps {
   editorState: EditorState;
   onEditorStateChange: (state: Partial<EditorState>) => void;
   onFocus: (editor: ActiveEditor) => void;
   onBlur: () => void;
 }
-
 interface SubjectiveQuestionProps extends QuestionComponentProps {
   data: BaseQuestionData;
   onDataChange: (data: Partial<BaseQuestionData>) => void;
 }
-
 export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
   data,
   onDataChange,
@@ -44,48 +39,38 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
   const [isLeftToRight, setIsLeftToRight] = useState(false);
   const [characterLimitEnabled, setCharacterLimitEnabled] = useState(false);
   const [characterLimit, setCharacterLimit] = useState(100);
-
   const handleQuestionContentChange = (content: string) => {
-    // Keep HTML for rich formatting in preview
     onDataChange({ questionTitle: content });
   };
-
   const handleQuestionDescriptionChange = (content: string) => {
     onDataChange({ questionDescription: content });
   };
-
   const handleCorrectAnswerChange = (content: string) => {
     onDataChange({ correctAnswer: content });
   };
-
   const handleCorrectAnswerDescriptionChange = (content: string) => {
     onDataChange({ correctAnswerDescription: content });
   };
-
   const handleQuestionDescriptionToggle = (show: boolean) => {
     setShowQuestionDescription(show);
     onDataChange({ showQuestionDescription: show });
   };
-
   const handleCorrectAnswerDescriptionToggle = (show: boolean) => {
     setShowCorrectAnswerDescription(show);
     onDataChange({ showCorrectAnswerDescription: show });
   };
-
   const handleCharacterLimitToggle = (enabled: boolean) => {
     setCharacterLimitEnabled(enabled);
     if (!enabled) {
       setCharacterLimit(100);
     }
   };
-
   const handleCharacterLimitChange = (limit: number) => {
     setCharacterLimit(limit);
   };
-
   return (
     <div className="space-y-4">
-      {/* Subjective Editor Fields */}
+      {}
       <div className="flex items-center space-x-8">
         <div className="flex items-center space-x-4">
           <label className="text-sm font-medium text-gray-700">
@@ -114,7 +99,6 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
           />
         </div>
       </div>
-
       <div>
         <label
           htmlFor="question"
@@ -122,7 +106,6 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
         >
           Question
         </label>
-
         <div className="border rounded-lg ">
           <Toolbar />
           <div className="p-3">
@@ -173,7 +156,6 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
           </div>
         )}
       </div>
-
       <div className="space-y-2">
         <label
           htmlFor="correct-answer"
@@ -181,7 +163,6 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
         >
           Correct answer
         </label>
-
         <div className="border rounded-lg ">
           <Toolbar />
           <div className="p-3">
@@ -224,7 +205,6 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
             >
               Description for correct answer
             </label>
-
             <div className="border rounded-lg ">
               <Toolbar />
               <div className="p-3">
@@ -236,9 +216,9 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
             </div>
           </div>
         )}
-        {/* Character Limit Toggle */}
+        {}
         <div className="flex items-center gap-1 p-1 border rounded-full w-fit">
-          {/* Toggle Button */}
+          {}
           <CustomSwitch
             isSelected={characterLimitEnabled}
             onSelectionChange={handleCharacterLimitToggle}
@@ -247,7 +227,6 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
             selectedColor="#0958D9"
             unselectedColor="#d1d5db"
           />
-
           {characterLimitEnabled && (
             <div className="flex items-center  px-1">
               <input

@@ -1,11 +1,18 @@
+export const QuestionMode = {
+  MULTIPLE_CHOICE: "MULTIPLE_CHOICE",
+  SUBJECTIVE: "SUBJECTIVE",
+  OBJECTIVE: "OBJECTIVE",
+  ARRANGING: "ARRANGING",
+  COMPOSITE: "COMPOSITE",
+  FILL_IN_BLANK: "FILL_IN_BLANK",
+} as const;
 export type QuestionType =
-  | "subjective"
-  | "objective"
-  | "multiple-choice"
-  | "fill-in-blank"
-  | "arrangement"
-  | "question-group";
-
+  | typeof QuestionMode.SUBJECTIVE
+  | typeof QuestionMode.OBJECTIVE
+  | typeof QuestionMode.MULTIPLE_CHOICE
+  | typeof QuestionMode.FILL_IN_BLANK
+  | typeof QuestionMode.ARRANGING
+  | typeof QuestionMode.COMPOSITE;
 export type ActiveEditor =
   | "question"
   | "questionDescription"
@@ -18,23 +25,18 @@ export type ActiveEditor =
   | "arrangementDescription"
   | "correctAnswerArrangementDescription"
   | null;
-
 export type Blank = {
   id: number;
   start: number;
   end: number;
   text: string;
 };
-
 export type Selection = {
   start: number;
   end: number;
   text: string;
 } | null;
-
 export type AnswerLayout = "horizontal" | "vertical";
-
-// Common question data interface
 export interface BaseQuestionData {
   questionTitle: string;
   questionDescription: string;
@@ -43,8 +45,6 @@ export interface BaseQuestionData {
   correctAnswerDescription: string;
   showCorrectAnswerDescription: boolean;
 }
-
-// Fill in blank specific data
 export interface FillInBlankData {
   sentence: string;
   blanks: Blank[];
@@ -56,8 +56,6 @@ export interface FillInBlankData {
   correctAnswerFillInBlankDescription: string;
   showCorrectAnswerFillInBlankDescription: boolean;
 }
-
-// Arrangement specific data
 export interface ArrangementData {
   sentence: string;
   mixedWords: string[];
@@ -81,19 +79,15 @@ export interface ArrangementData {
     isMixed: boolean;
   }>;
 }
-
-// Multiple choice specific data
 export interface MultipleChoiceInput {
   id: string;
   text: string;
 }
-
 export interface MultipleChoiceOption {
   id: string;
   inputs: MultipleChoiceInput[];
   isCorrect: boolean;
 }
-
 export interface MultipleChoiceData {
   questionTitle: string;
   questionDescription: string;
@@ -103,32 +97,25 @@ export interface MultipleChoiceData {
   correctAnswerDescription: string;
   showCorrectAnswerDescription: boolean;
 }
-
-// Question Group specific data
 export interface QuestionGroupItem {
   id: string;
   title: string;
-  type: Exclude<QuestionType, "question-group">;
+  type: Exclude<QuestionType, typeof QuestionMode.COMPOSITE>;
   baseData?: BaseQuestionData;
   fillInBlankData?: FillInBlankData;
   arrangementData?: ArrangementData;
   multipleChoiceData?: MultipleChoiceData;
 }
-
 export interface QuestionGroupData {
   groupTitle: string;
   groupDescription: string;
   showGroupDescription: boolean;
   questions: QuestionGroupItem[];
 }
-
-// Editor state interface
 export interface EditorState {
   activeEditor: ActiveEditor;
   questionType: QuestionType;
 }
-
-// Common props for question components
 export interface QuestionComponentProps {
   editorState: EditorState;
   onEditorStateChange: (state: Partial<EditorState>) => void;

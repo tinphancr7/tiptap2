@@ -5,16 +5,9 @@ import type {
   ArrangementData,
   MultipleChoiceData,
   QuestionGroupData,
+  QuestionType,
 } from "./types";
-
-export type QuestionType =
-  | "subjective"
-  | "objective"
-  | "multiple-choice"
-  | "fill-in-blank"
-  | "arrangement"
-  | "question-group";
-
+import { QuestionMode } from "./types";
 export interface BaseQuestionData {
   questionTitle: string;
   questionDescription: string;
@@ -23,7 +16,6 @@ export interface BaseQuestionData {
   correctAnswerDescription: string;
   showCorrectAnswerDescription: boolean;
 }
-
 interface QuestionPreviewProps {
   questionType: QuestionType;
   baseData: BaseQuestionData;
@@ -32,7 +24,6 @@ interface QuestionPreviewProps {
   multipleChoiceData?: MultipleChoiceData;
   questionGroupData?: QuestionGroupData;
 }
-
 export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
   questionType,
   baseData,
@@ -43,8 +34,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
 }) => {
   const renderFillInBlankPreview = () => {
     if (!fillInBlankData) return null;
-
-    // Get blanks sorted by their appearance in the sentence (same as preview)
     const getSortedBlanks = () => {
       return [...fillInBlankData.blanks].sort((a, b) => {
         const aIndex = fillInBlankData.sentence.indexOf(`{BLANK_${a.id}}`);
@@ -52,26 +41,18 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
         return aIndex - bIndex;
       });
     };
-
     const sortedBlanks = getSortedBlanks();
-
     const renderSentenceWithBlanks = () => {
       if (!fillInBlankData.sentence) return null;
-
       if (fillInBlankData.blanks.length === 0) {
         return <span>{fillInBlankData.sentence}</span>;
       }
-
       const workingSentence = fillInBlankData.sentence;
       const elements: (string | React.ReactNode)[] = [];
-
-      // Create a map of blank placeholders to their numbered boxes
       const blankElements = new Map<string, React.ReactNode>();
-
       sortedBlanks.forEach((blank, index) => {
         const placeholder = `{BLANK_${blank.id}}`;
         const blankNumber = index + 1;
-
         const blankElement = (
           <span
             key={blank.id}
@@ -87,30 +68,22 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
             />
           </span>
         );
-
         blankElements.set(placeholder, blankElement);
       });
-
-      // Split sentence by placeholders and process
       const placeholderPattern = new RegExp(`(\\{BLANK_\\d+\\})`, "g");
       const parts = workingSentence.split(placeholderPattern);
-
       parts.forEach((part) => {
         if (part.match(/^\{BLANK_\d+\}$/)) {
-          // This is a placeholder - replace with numbered box
           const blankElement = blankElements.get(part);
           if (blankElement) {
             elements.push(blankElement);
           }
         } else if (part) {
-          // This is regular text
           elements.push(part);
         }
       });
-
       return <>{elements}</>;
     };
-
     return (
       <div className="space-y-6 ">
         <div>
@@ -156,7 +129,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
             </div>
           </div>
         )}
-
         {fillInBlankData.showCorrectAnswerFillInBlankDescription &&
           fillInBlankData.correctAnswerFillInBlankDescription && (
             <div className="space-y-2">
@@ -174,10 +146,8 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
       </div>
     );
   };
-
   const renderArrangementPreview = () => {
     if (!arrangementData) return null;
-
     const WordToken = ({
       word,
       className,
@@ -191,27 +161,20 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
         {word}
       </div>
     );
-
-    // Tách ra những phần chưa được mix và những phần đã mix
     const renderPreviewSentence = () => {
       if (!arrangementData.mixedWordsWithBorder) {
         return <div className="text-lg mb-4">{arrangementData.sentence}</div>;
       }
-
-      // Tạo preview với thanh ngang cho những từ bị mix
       const sentenceElements: React.ReactElement[] = [];
       const mixedWords: string[] = [];
-
       arrangementData.mixedWordsWithBorder.forEach((wordInfo, index) => {
         if (!wordInfo.isMixed) {
-          // Từ chưa được mix - hiển thị bình thường
           sentenceElements.push(
             <span key={`unmixed-${index}`} className="mr-2">
               {wordInfo.word}
             </span>
           );
         } else {
-          // Từ đã được mix - hiển thị thanh ngang
           mixedWords.push(wordInfo.word);
           sentenceElements.push(
             <span key={`blank-${index}`} className="inline-block mr-2">
@@ -220,15 +183,13 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
           );
         }
       });
-
       return (
         <div className="space-y-4">
-          {/* Hiển thị câu với thanh ngang cho những từ bị mix */}
+          {}
           <div className="text-lg flex flex-wrap items-baseline">
             {sentenceElements}
           </div>
-
-          {/* Hiển thị những từ đã được mix dưới dạng tokens */}
+          {}
           {mixedWords.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {mixedWords.map((word, index) => (
@@ -243,7 +204,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
         </div>
       );
     };
-
     return (
       <div className="space-y-5">
         <h3 className="font-semibold text-lg mb-4">Rearrange this sentence</h3>
@@ -262,8 +222,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
               />
             </div>
           )}
-
-        {/* Mixed Answer Section */}
+        {}
         {arrangementData.mixedWords.length > 0 && (
           <div className="space-y-4">
             <div>
@@ -300,8 +259,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
                 </div>
               </div>
             </div>
-
-            {/* Mixed Answer Description */}
+            {}
             {arrangementData.showMixedAnswerDescription &&
               arrangementData.mixedAnswerDescription && (
                 <div>
@@ -318,8 +276,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
               )}
           </div>
         )}
-
-        {/* Correct Answer Section */}
+        {}
         {arrangementData.mixedWords.length > 0 &&
           arrangementData.correctOrder.length > 0 && (
             <div className="space-y-4">
@@ -361,8 +318,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
                   </div>
                 </div>
               </div>
-
-              {/* Correct Answer Description */}
+              {}
               {arrangementData.showCorrectAnswerDescription &&
                 arrangementData.correctAnswerDescription && (
                   <div>
@@ -382,10 +338,8 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
       </div>
     );
   };
-
   const renderMultipleChoicePreview = () => {
     if (!multipleChoiceData) return null;
-
     return (
       <div className="space-y-6">
         {multipleChoiceData.questionTitle && (
@@ -415,23 +369,19 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
               )}
           </div>
         )}
-
-        {/* Show all options with checkboxes */}
+        {}
         {multipleChoiceData.options.some((option) =>
           option.inputs.some((input) => input.text.trim() !== "")
         ) && (
           <div className="space-y-4">
-            <h5 className="font-medium text-sm mb-2">Correct answer</h5>
+            <h5 className="font-medium text-sm mb-2">Correct answer:</h5>
             <div className="space-y-2">
               {multipleChoiceData.options.map((option) => {
                 const optionText = option.inputs
                   .map((input) => input.text)
                   .filter((text) => text.trim() !== "")
                   .join(" ");
-
-                // Only show option if it has actual content
                 if (!optionText) return null;
-
                 return (
                   <div key={option.id} className="flex items-center gap-3">
                     <div
@@ -462,7 +412,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
             </div>
           </div>
         )}
-
         {multipleChoiceData.showCorrectAnswerDescription &&
           multipleChoiceData.correctAnswerDescription && (
             <div>
@@ -480,13 +429,9 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
       </div>
     );
   };
-
   const renderQuestionGroupPreview = () => {
     if (!questionGroupData) return null;
-
-    // Helper functions that reuse the exact same logic as the main render functions
     const renderFillInBlankSubQuestion = (data: FillInBlankData) => {
-      // Get blanks sorted by their appearance in the sentence (same as main function)
       const getSortedBlanks = () => {
         return [...data.blanks].sort((a, b) => {
           const aIndex = data.sentence.indexOf(`{BLANK_${a.id}}`);
@@ -494,26 +439,18 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
           return aIndex - bIndex;
         });
       };
-
       const sortedBlanks = getSortedBlanks();
-
       const renderSentenceWithBlanks = () => {
         if (!data.sentence) return null;
-
         if (data.blanks.length === 0) {
           return <span>{data.sentence}</span>;
         }
-
         const workingSentence = data.sentence;
         const elements: (string | React.ReactNode)[] = [];
-
-        // Create a map of blank placeholders to their numbered boxes
         const blankElements = new Map<string, React.ReactNode>();
-
         sortedBlanks.forEach((blank, index) => {
           const placeholder = `{BLANK_${blank.id}}`;
           const blankNumber = index + 1;
-
           const blankElement = (
             <span
               key={blank.id}
@@ -529,30 +466,22 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
               />
             </span>
           );
-
           blankElements.set(placeholder, blankElement);
         });
-
-        // Split sentence by placeholders and process
         const placeholderPattern = new RegExp(`(\\{BLANK_\\d+\\})`, "g");
         const parts = workingSentence.split(placeholderPattern);
-
         parts.forEach((part) => {
           if (part.match(/^\{BLANK_\d+\}$/)) {
-            // This is a placeholder - replace with numbered box
             const blankElement = blankElements.get(part);
             if (blankElement) {
               elements.push(blankElement);
             }
           } else if (part) {
-            // This is regular text
             elements.push(part);
           }
         });
-
         return <>{elements}</>;
       };
-
       return (
         <div className="space-y-6 ">
           <div>
@@ -597,7 +526,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
               </div>
             </div>
           )}
-
           {data.showCorrectAnswerFillInBlankDescription &&
             data.correctAnswerFillInBlankDescription && (
               <div className="space-y-2">
@@ -615,7 +543,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
         </div>
       );
     };
-
     const renderArrangementSubQuestion = (data: ArrangementData) => {
       const WordToken = ({
         word,
@@ -630,16 +557,12 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
           {word}
         </div>
       );
-
-      // Same logic as main function
       const renderPreviewSentence = () => {
         if (!data.mixedWordsWithBorder) {
           return <div className="text-lg mb-4">{data.sentence}</div>;
         }
-
         const sentenceElements: React.ReactElement[] = [];
         const mixedWords: string[] = [];
-
         data.mixedWordsWithBorder.forEach((wordInfo, index) => {
           if (!wordInfo.isMixed) {
             sentenceElements.push(
@@ -656,7 +579,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
             );
           }
         });
-
         return (
           <div className="space-y-4">
             <div className="flex flex-wrap items-baseline">
@@ -676,7 +598,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
           </div>
         );
       };
-
       return (
         <div className="space-y-5">
           <h3 className="font-semibold text-lg mb-4">
@@ -699,7 +620,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
         </div>
       );
     };
-
     const renderMultipleChoiceSubQuestion = (data: MultipleChoiceData) => {
       return (
         <div className="space-y-6">
@@ -729,23 +649,19 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
               )}
             </div>
           )}
-
-          {/* Show all options with checkboxes */}
+          {}
           {data.options.some((option) =>
             option.inputs.some((input) => input.text.trim() !== "")
           ) && (
             <div className="space-y-4">
-              <h5 className="font-medium text-sm mb-2">Correct answer</h5>
+              <h5 className="font-medium text-sm mb-2">Correct answer:</h5>
               <div className="space-y-2">
                 {data.options.map((option) => {
                   const optionText = option.inputs
                     .map((input) => input.text)
                     .filter((text) => text.trim() !== "")
                     .join(" ");
-
-                  // Only show option if it has actual content
                   if (!optionText) return null;
-
                   return (
                     <div key={option.id} className="flex items-center gap-3">
                       <div
@@ -776,7 +692,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
               </div>
             </div>
           )}
-
           {data.showCorrectAnswerDescription &&
             data.correctAnswerDescription && (
               <div>
@@ -794,16 +709,14 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
         </div>
       );
     };
-
     const renderStandardSubQuestion = (data: BaseQuestionData) => {
       return (
         <div className="space-y-4">
-          {/* Question Section - Only show if there's data */}
+          {}
           {data.questionTitle && (
             <div>
               <h3 dangerouslySetInnerHTML={{ __html: data.questionTitle }} />
-
-              {/* Question Description - Only show if enabled and has content */}
+              {}
               {data.showQuestionDescription && data.questionDescription && (
                 <div className="mt-3">
                   <label className="block text-sm font-medium text-gray-700 ">
@@ -818,16 +731,14 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
               )}
             </div>
           )}
-
-          {/* Correct Answer Section - Only show if there's data */}
+          {}
           {data.correctAnswer && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 ">
-                Correct answer
-              </label>
+              <h5 className="block text-sm font-medium text-gray-700 ">
+                Correct answer:
+              </h5>
               <div dangerouslySetInnerHTML={{ __html: data.correctAnswer }} />
-
-              {/* Correct Answer Description - Only show if enabled and has content */}
+              {}
               {data.showCorrectAnswerDescription &&
                 data.correctAnswerDescription && (
                   <div className="mt-3">
@@ -848,38 +759,31 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
         </div>
       );
     };
-
-    // Helper function to render individual sub-questions
     const renderSubQuestionPreview = (
       question: QuestionGroupData["questions"][0]
     ) => {
       switch (question.type) {
-        case "fill-in-blank":
+        case QuestionMode.FILL_IN_BLANK:
           return question.fillInBlankData
             ? renderFillInBlankSubQuestion(question.fillInBlankData)
             : null;
-
-        case "arrangement":
+        case QuestionMode.ARRANGING:
           return question.arrangementData
             ? renderArrangementSubQuestion(question.arrangementData)
             : null;
-
-        case "multiple-choice":
+        case QuestionMode.MULTIPLE_CHOICE:
           return question.multipleChoiceData
             ? renderMultipleChoiceSubQuestion(question.multipleChoiceData)
             : null;
-
-        case "subjective":
-        case "objective":
+        case QuestionMode.SUBJECTIVE:
+        case QuestionMode.OBJECTIVE:
           return question.baseData
             ? renderStandardSubQuestion(question.baseData)
             : null;
-
         default:
           return null;
       }
     };
-
     const renderIndividualQuestion = (
       question: QuestionGroupData["questions"][0],
       index: number
@@ -898,7 +802,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
     };
     return (
       <div className="space-y-6">
-        {/* Group Title */}
+        {}
         <div className="space-y-2">
           <h2 className="text-lg font-semibold text-gray-900">
             {questionGroupData.groupTitle ? (
@@ -922,8 +826,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
               </div>
             )}
         </div>
-
-        {/* Questions */}
+        {}
         {questionGroupData.questions &&
         questionGroupData.questions.length > 0 ? (
           <div className="space-y-8">
@@ -939,16 +842,14 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
       </div>
     );
   };
-
   const renderStandardPreview = () => {
     return (
       <div className="space-y-4">
-        {/* Question Section - Only show if there's data */}
+        {}
         {baseData.questionTitle && (
           <div>
             <h3 dangerouslySetInnerHTML={{ __html: baseData.questionTitle }} />
-
-            {/* Question Description - Only show if enabled and has content */}
+            {}
             {baseData.showQuestionDescription &&
               baseData.questionDescription && (
                 <div className="mt-3">
@@ -964,21 +865,19 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
               )}
           </div>
         )}
-
-        {/* Correct Answer Section - Only show if there's data */}
+        {}
         {baseData.correctAnswer && (
           <div>
             <label className="block text-sm font-medium text-gray-700 ">
-              Correct answer
+              Correct answer:
             </label>
             <div dangerouslySetInnerHTML={{ __html: baseData.correctAnswer }} />
-
-            {/* Correct Answer Description - Only show if enabled and has content */}
+            {}
             {baseData.showCorrectAnswerDescription &&
               baseData.correctAnswerDescription && (
                 <div className="mt-3">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description for correct answer
+                    Description for correct answer:
                   </label>
                   <div className="">
                     <div
@@ -994,17 +893,16 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
       </div>
     );
   };
-
   return (
     <div className="sticky tiptap p-5 bg-white">
       <h2 className="text-lg font-semibold mb-4">Live Preview</h2>
-      {questionType === "fill-in-blank"
+      {questionType === QuestionMode.FILL_IN_BLANK
         ? renderFillInBlankPreview()
-        : questionType === "arrangement"
+        : questionType === QuestionMode.ARRANGING
           ? renderArrangementPreview()
-          : questionType === "multiple-choice"
+          : questionType === QuestionMode.MULTIPLE_CHOICE
             ? renderMultipleChoicePreview()
-            : questionType === "question-group"
+            : questionType === QuestionMode.COMPOSITE
               ? renderQuestionGroupPreview()
               : renderStandardPreview()}
     </div>

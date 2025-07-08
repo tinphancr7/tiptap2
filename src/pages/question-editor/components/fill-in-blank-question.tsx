@@ -11,15 +11,12 @@ export type Blank = {
   end: number;
   text: string;
 };
-
 export type Selection = {
   start: number;
   end: number;
   text: string;
 } | null;
-
 export type AnswerLayout = "horizontal" | "vertical";
-
 export interface FillInBlankData {
   sentence: string;
   blanks: Blank[];
@@ -31,12 +28,10 @@ export interface FillInBlankData {
   correctAnswerFillInBlankDescription: string;
   showCorrectAnswerFillInBlankDescription: boolean;
 }
-
 interface FillInBlankQuestionProps {
   data: FillInBlankData;
   onDataChange: (data: Partial<FillInBlankData>) => void;
 }
-
 export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
   data,
   onDataChange,
@@ -46,8 +41,6 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
   );
   const [showCorrectAnswerDescription, setShowCorrectAnswerDescription] =
     useState(data.showCorrectAnswerFillInBlankDescription);
-
-  // Text selection logic for fill-in-blank
   const [selectedText, setSelectedText] = useState<{
     text: string;
     start: number;
@@ -58,55 +51,39 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
     left: number;
   } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
   const handleFillInBlankDescriptionToggle = (show: boolean) => {
     setShowFillInBlankDescription(show);
     onDataChange({ showFillInBlankDescription: show });
   };
-
   const handleCorrectAnswerDescriptionToggle = (show: boolean) => {
     setShowCorrectAnswerDescription(show);
     onDataChange({ showCorrectAnswerFillInBlankDescription: show });
   };
-
   const handleSentenceChange = (content: string) => {
     const plainText = content.replace(/<[^>]*>/g, "");
     onDataChange({ sentence: plainText });
   };
-
   const handleFillInBlankDescriptionChange = (content: string) => {
     onDataChange({ fillInBlankDescription: content });
   };
-
   const handleCorrectAnswerDescriptionChange = (content: string) => {
     onDataChange({ correctAnswerFillInBlankDescription: content });
   };
-
-  // Helper function to get selection position for tooltip
   const getSelectionBoundingRect = () => {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return null;
-
     const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
-
-    // Get container position for relative positioning
     const containerRect = containerRef.current?.getBoundingClientRect();
     if (!containerRect) return null;
-
     return {
       top: rect.top - containerRect.top - 45, // Position above the selection
       left: rect.left - containerRect.left + rect.width, // Position at the end of selection
     };
   };
-
-  // Handle text selection for fill-in-blank
   const handleTextSelection = (text: string, start: number, end: number) => {
     if (text.trim()) {
-      // Show tooltip for fill-in-blank functionality
       setSelectedText({ text: text.trim(), start, end });
-
-      // Get selection position after a small delay to ensure DOM is updated
       setTimeout(() => {
         const position = getSelectionBoundingRect();
         if (position) {
@@ -114,13 +91,10 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
         }
       }, 10);
     } else {
-      // Clear selection when no text is selected
       setSelectedText(null);
       setTooltipPosition(null);
     }
   };
-
-  // Handle adding selected text to blank
   const handleAddToBlank = () => {
     if (selectedText) {
       handleTextSelected(
@@ -132,8 +106,6 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
       setTooltipPosition(null);
     }
   };
-
-  // Handle click outside to close tooltip
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
@@ -146,60 +118,38 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
         setTooltipPosition(null);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  // This function is called when text is selected OR when "Add to Blank" is clicked
   const handleTextSelected = (
     selectedText: string,
     start: number,
     end: number
   ) => {
-    // If there's meaningful text and valid positions, this means user clicked "Add to Blank"
     if (selectedText.trim() && start >= 0 && end > start) {
-      // Process the addition to blanks
       const selectedTextTrimmed = selectedText.trim();
       const currentSentence = data.sentence;
-
-      // We'll check for exact position duplicates later, not just text duplicates
-      // Allow same text at different positions
-
-      // Find all occurrences of the selected text in the sentence
       const occurrences: { start: number; end: number }[] = [];
       let searchStart = 0;
-
-      // First, try to find exact matches
       while (true) {
         const index = currentSentence.indexOf(selectedTextTrimmed, searchStart);
         if (index === -1) break;
-
-        // Check if this occurrence overlaps with existing placeholders
         const beforeIndex = currentSentence.substring(0, index);
-
-        // Check if we're completely inside a placeholder
         const beforePlaceholder = beforeIndex.lastIndexOf("{BLANK_");
         const beforePlaceholderEnd = beforeIndex.lastIndexOf("}");
         const isCompletelyInsidePlaceholder =
           beforePlaceholder > beforePlaceholderEnd && beforePlaceholder !== -1;
-
-        // If not completely inside a placeholder, this is a valid occurrence
         if (!isCompletelyInsidePlaceholder) {
           occurrences.push({
             start: index,
             end: index + selectedTextTrimmed.length,
           });
         }
-
         searchStart = index + 1;
       }
-
-      // If no exact matches found, check if text spans across placeholders
       if (occurrences.length === 0) {
-        // Create a version of the sentence with placeholders replaced by original text
         let reconstructedSentence = currentSentence;
         data.blanks.forEach((blank) => {
           const placeholder = `{BLANK_${blank.id}}`;
@@ -208,11 +158,8 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
             blank.text
           );
         });
-
-        // Check if the text exists in the reconstructed sentence
         const existsInReconstructed =
           reconstructedSentence.includes(selectedTextTrimmed);
-
         if (existsInReconstructed) {
           alert(
             `Text "${selectedTextTrimmed}" overlap với blank hiện tại. Vui lòng xóa blank liên quan trước hoặc chọn text khác.`
@@ -224,50 +171,37 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
         }
         return;
       }
-
-      // Use the first available occurrence
       const { start: actualStart, end: actualEnd } = occurrences[0];
-
-      // Check if this exact position already has a blank (overlap check)
       const positionOverlap = data.blanks.some((blank) => {
-        // Check if the new blank would overlap with existing blank positions
         return (
           (actualStart >= blank.start && actualStart < blank.end) ||
           (actualEnd > blank.start && actualEnd <= blank.end) ||
           (actualStart <= blank.start && actualEnd >= blank.end)
         );
       });
-
       if (positionOverlap) {
         alert(
           `Text "${selectedTextTrimmed}" overlap với blank hiện tại. Vui lòng chọn vị trí khác.`
         );
         return;
       }
-
       const newBlank: Blank = {
         id: Date.now(),
         start: actualStart,
         end: actualEnd,
         text: selectedTextTrimmed,
       };
-
       const placeholder = `{BLANK_${newBlank.id}}`;
-
-      // Use the actual positions for replacement
       const beforeText = currentSentence.substring(0, actualStart);
       const afterText = currentSentence.substring(actualEnd);
       const newSentence = beforeText + placeholder + afterText;
-
       const newBlanks = [...data.blanks, newBlank];
-
       onDataChange({
         blanks: newBlanks,
         sentence: newSentence,
         selection: null, // Clear selection after adding
       });
     } else {
-      // Just store the selection info for potential use (when just selecting text)
       onDataChange({
         selection: selectedText.trim()
           ? {
@@ -279,24 +213,15 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
       });
     }
   };
-
-  // Function to handle clicking on a blank to remove it
   const handleRemoveBlank = (blankToRemove: Blank) => {
     const placeholder = `{BLANK_${blankToRemove.id}}`;
-
-    // Replace the placeholder back with the original text
     const newSentence = data.sentence.replace(placeholder, blankToRemove.text);
-
-    // Remove the blank from the array
     const newBlanks = data.blanks.filter(
       (blank) => blank.id !== blankToRemove.id
     );
-
-    // Update positions of remaining blanks if needed
     const updatedBlanks = newBlanks.map((blank) => {
       const blankPlaceholder = `{BLANK_${blank.id}}`;
       const blankPosition = newSentence.indexOf(blankPlaceholder);
-
       if (blankPosition !== -1) {
         return {
           ...blank,
@@ -304,17 +229,14 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
           end: blankPosition + blank.text.length,
         };
       }
-
       return blank;
     });
-
     onDataChange({
       blanks: updatedBlanks,
       sentence: newSentence,
       selection: null,
     });
   };
-
   const getSortedBlanks = () => {
     return [...data.blanks].sort((a, b) => {
       const aIndex = data.sentence.indexOf(`{BLANK_${a.id}}`);
@@ -322,26 +244,19 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
       return aIndex - bIndex;
     });
   };
-
   const renderSentenceWithBlanks = () => {
     if (!data.sentence)
       return <span className="text-gray-400">Enter text above...</span>;
-
     if (data.blanks.length === 0) {
       return <span>{data.sentence}</span>;
     }
-
     const workingSentence = data.sentence;
     const elements: (string | React.ReactNode)[] = [];
-
     const sortedBlanks = getSortedBlanks();
-
     const blankElements = new Map<string, React.ReactNode>();
-
     sortedBlanks.forEach((blank, index) => {
       const placeholder = `{BLANK_${blank.id}}`;
       const blankNumber = index + 1;
-
       const blankElement = (
         <span
           key={blank.id}
@@ -355,13 +270,10 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
           </span>
         </span>
       );
-
       blankElements.set(placeholder, blankElement);
     });
-
     const placeholderPattern = new RegExp(`(\\{BLANK_\\d+\\})`, "g");
     const parts = workingSentence.split(placeholderPattern);
-
     parts.forEach((part) => {
       if (part.match(/^\{BLANK_\d+\}$/)) {
         const blankElement = blankElements.get(part);
@@ -372,10 +284,8 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
         elements.push(part);
       }
     });
-
     return <>{elements}</>;
   };
-
   return (
     <div className="space-y-4">
       <div className="space-y-2 ">
@@ -384,14 +294,12 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
           <Toolbar />
           <div className="border p-4 space-y-2 rounded-b-lg">
             <label className="text-lg font-medium ">Fill in blank</label>
-
             <Editor
               placeholder="Enter your fill in blank question here"
               onContentChange={handleSentenceChange}
               onTextSelection={handleTextSelection}
             />
-
-            {/* Selection Tooltip */}
+            {}
             {selectedText && tooltipPosition && (
               <div
                 className="selection-tooltip absolute z-50 animate-in fade-in-0 zoom-in-95 duration-200"
@@ -415,7 +323,6 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
                 </Button>
               </div>
             )}
-
             {data.sentence && (
               <div className="mt-4 p-3 bg-gray-50 rounded-md">
                 <div className="leading-relaxed">
@@ -447,7 +354,6 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
           )}
         </div>
       </div>
-
       {showFillInBlankDescription && (
         <div className="space-y-2">
           <label
@@ -467,10 +373,8 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
           </div>
         </div>
       )}
-
       <div className="space-y-2">
         <label className="text-sm font-medium ">Correct answer</label>
-
         {data.blanks.length > 0 && (
           <div
             className={`flex items-start gap-5 ${

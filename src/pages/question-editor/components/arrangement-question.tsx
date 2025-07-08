@@ -6,12 +6,10 @@ import type { ArrangementData } from "./types";
 import { FaRandom } from "react-icons/fa";
 import { AiOutlinePlus } from "react-icons/ai";
 import { GrFormViewHide } from "react-icons/gr";
-
 interface ArrangementQuestionProps {
   data: ArrangementData;
   onDataChange: (data: Partial<ArrangementData>) => void;
 }
-
 export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
   data,
   onDataChange,
@@ -30,8 +28,6 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
     text: string;
   } | null>(null);
   const [warningMessage, setWarningMessage] = useState<string>("");
-
-  // Track mixed regions to prevent overlapping
   const [mixedRegions, setMixedRegions] = useState<
     Array<{
       start: number;
@@ -39,26 +35,21 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
       text: string;
     }>
   >([]);
-
   const handleQuestionDescriptionToggle = (show: boolean) => {
     setShowQuestionDescription(show);
     onDataChange({ showQuestionDescription: show });
   };
-
   const handleMixedAnswerDescriptionToggle = (show: boolean) => {
     setShowMixedAnswerDescription(show);
     onDataChange({ showMixedAnswerDescription: show });
   };
-
   const handleCorrectAnswerDescriptionToggle = (show: boolean) => {
     setShowCorrectAnswerDescription(show);
     onDataChange({ showCorrectAnswerDescription: show });
   };
-
   const handleSentenceChange = (content: string) => {
     const plainText = content.replace(/<[^>]*>/g, "");
     const words = plainText.trim() ? plainText.trim().split(/\s+/) : [];
-
     onDataChange({
       sentence: plainText,
       correctOrder: words,
@@ -66,12 +57,9 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
       mixedWordsWithBorder: undefined,
       correctOrderWithBorder: undefined,
     });
-
-    // Reset mixed regions when sentence changes
     setMixedRegions([]);
     setWarningMessage("");
   };
-
   const handleTextSelection = (
     selectedText: string,
     start: number,
@@ -87,26 +75,19 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
       setTextSelection(null);
     }
   };
-
   const handleQuestionDescriptionChange = (content: string) => {
     onDataChange({ questionDescription: content });
   };
-
   const handleMixedAnswerDescriptionChange = (content: string) => {
     onDataChange({ mixedAnswerDescription: content });
   };
-
   const handleCorrectAnswerDescriptionChange = (content: string) => {
     onDataChange({ correctAnswerDescription: content });
   };
-
   const handleMixWords = () => {
     if (!textSelection || !textSelection.text.trim()) return;
-
     const selectedText = textSelection.text.trim();
     const selectedWords = selectedText.split(/\s+/);
-
-    // Find the position of selected text in the original sentence
     const originalWords = data.sentence.trim().split(/\s+/);
     const selectedStartIndex = originalWords.findIndex((_, index) => {
       const remainingWords = originalWords.slice(
@@ -115,22 +96,17 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
       );
       return remainingWords.join(" ") === selectedText;
     });
-
     if (selectedStartIndex === -1) {
       setWarningMessage("Cannot find selected text in the sentence");
       setTimeout(() => setWarningMessage(""), 3000);
       return;
     }
-
     const selectedEndIndex = selectedStartIndex + selectedWords.length - 1;
-
-    // Check if this region overlaps with any existing mixed region
     const hasOverlap = mixedRegions.some((region) => {
       return !(
         selectedEndIndex < region.start || selectedStartIndex > region.end
       );
     });
-
     if (hasOverlap) {
       setWarningMessage(
         "This text region overlaps with previously mixed text. Please select a different region."
@@ -138,21 +114,15 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
       setTimeout(() => setWarningMessage(""), 3000);
       return;
     }
-
-    // Shuffle the selected words
     const shuffled = [...selectedWords];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-
-    // Create new mixed sentence by replacing selected text with shuffled text
     const newMixedWords = [...originalWords];
     for (let i = 0; i < selectedWords.length; i++) {
       newMixedWords[selectedStartIndex + i] = shuffled[i];
     }
-
-    // Add this region to mixed regions
     const newMixedRegions = [
       ...mixedRegions,
       {
@@ -161,8 +131,6 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
         text: selectedText,
       },
     ];
-
-    // Create markers for which words are mixed
     const mixedWordsWithBorder = newMixedWords.map((word, index) => ({
       word,
       index,
@@ -170,7 +138,6 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
         (region) => index >= region.start && index <= region.end
       ),
     }));
-
     const correctOrderWithBorder = originalWords.map((word, index) => ({
       word,
       index,
@@ -178,19 +145,16 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
         (region) => index >= region.start && index <= region.end
       ),
     }));
-
     onDataChange({
       mixedWords: newMixedWords,
       correctOrder: originalWords, // Keep original order
       mixedWordsWithBorder,
       correctOrderWithBorder,
     });
-
     setMixedRegions(newMixedRegions);
     setTextSelection(null);
     setWarningMessage("");
   };
-
   const WordToken = ({
     word,
     className,
@@ -206,7 +170,6 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
       {word}
     </div>
   );
-
   return (
     <>
       <div className="space-y-2">
@@ -219,7 +182,6 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
             <label className="text-lg font-medium ">
               Rearrange this sentence
             </label>
-
             <div className="relative">
               <Editor
                 placeholder="Enter the sentence to be rearranged"
@@ -286,7 +248,6 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
           </div>
         )}
       </div>
-
       {data.mixedWords.length > 0 && (
         <div className="space-y-4">
           <div className="space-y-2">
@@ -349,24 +310,17 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
                 </button>
                 <button
                   onClick={() => {
-                    // Remix all mixed regions with random positioning
                     if (!data.mixedWordsWithBorder || mixedRegions.length === 0)
                       return;
-
                     const newMixedWords = [...data.correctOrder];
-
-                    // Collect all mixed words from all regions
                     const allMixedWords: string[] = [];
                     const allMixedPositions: number[] = [];
-
                     mixedRegions.forEach((region) => {
                       for (let i = region.start; i <= region.end; i++) {
                         allMixedWords.push(data.correctOrder[i]);
                         allMixedPositions.push(i);
                       }
                     });
-
-                    // Shuffle all mixed words together
                     const shuffledMixedWords = [...allMixedWords];
                     for (let i = shuffledMixedWords.length - 1; i > 0; i--) {
                       const j = Math.floor(Math.random() * (i + 1));
@@ -375,13 +329,9 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
                         shuffledMixedWords[i],
                       ];
                     }
-
-                    // Place shuffled words back into their mixed positions
                     shuffledMixedWords.forEach((word, index) => {
                       newMixedWords[allMixedPositions[index]] = word;
                     });
-
-                    // Update the mixed words with border info
                     const mixedWordsWithBorder = newMixedWords.map(
                       (word, index) => ({
                         word,
@@ -392,7 +342,6 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
                         ),
                       })
                     );
-
                     onDataChange({
                       mixedWords: newMixedWords,
                       mixedWordsWithBorder,
@@ -406,7 +355,6 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
                 </button>
                 <button
                   onClick={() => {
-                    // Reset all mixed regions
                     setMixedRegions([]);
                     onDataChange({
                       mixedWords: [],
@@ -435,7 +383,6 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
               </div>
             </div>
           </div>
-
           {showMixedAnswerDescription && (
             <div className="space-y-2">
               <label
@@ -457,7 +404,6 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
           )}
         </div>
       )}
-
       {data.mixedWords.length > 0 && data.correctOrder.length > 0 && (
         <div className="space-y-4">
           <div className="space-y-2">
@@ -537,7 +483,6 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
               </div>
             </div>
           </div>
-
           {showCorrectAnswerDescription && (
             <div className="space-y-2">
               <label
