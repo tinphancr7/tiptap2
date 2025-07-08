@@ -184,7 +184,7 @@ const QuestionSettings = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col px-4">
+    <div className="h-screen flex flex-col px-4 bg-gray-50">
       <div className="flex-shrink-0">
         <RegistrationHeader currentStep={currentStep} steps={steps} />
       </div>

@@ -67,130 +67,83 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
     onDataChange({ correctAnswerFillInBlankDescription: content });
   };
 
-  // This function is called when text is selected OR when "Add to Blank" is clicked
+  // This function is called when text is selected, but doesn't process it yet
   const handleTextSelected = (
     selectedText: string,
     start: number,
     end: number
   ) => {
-    // If there's meaningful text and valid positions, this means user clicked "Add to Blank"
-    if (selectedText.trim() && start >= 0 && end > start) {
-      // Process the addition to blanks
-      const selectedTextTrimmed = selectedText.trim();
-
-      // Find the exact position of the selected text in the original sentence
-      const originalSentence = data.sentence;
-      const selectedTextIndex = originalSentence.indexOf(selectedTextTrimmed);
-
-      if (selectedTextIndex === -1) {
-        alert(
-          `Cannot find "${selectedTextTrimmed}" in the sentence. Please try selecting the text again.`
-        );
-        return;
-      }
-
-      const actualStart = selectedTextIndex;
-      const actualEnd = selectedTextIndex + selectedTextTrimmed.length;
-
-      const exactMatch = data.blanks.find(
-        (blank) => blank.text === selectedTextTrimmed
-      );
-      if (exactMatch) {
-        alert(`"${selectedTextTrimmed}" đã được thêm vào fill-in-blank rồi!`);
-        return;
-      }
-
-      const overlappingBlank = data.blanks.find((blank) => {
-        const selectedContainsBlank = selectedTextTrimmed.includes(blank.text);
-        const blankContainsSelected = blank.text.includes(selectedTextTrimmed);
-
-        if (selectedContainsBlank || blankContainsSelected) {
-          return true;
-        }
-
-        const blankStart = blank.start;
-        const blankEnd = blank.end;
-
-        const hasPositionOverlap =
-          actualStart < blankEnd && actualEnd > blankStart;
-
-        return hasPositionOverlap;
-      });
-
-      if (overlappingBlank) {
-        alert(
-          `"${selectedTextTrimmed}" có chồng lấn với blank "${overlappingBlank.text}" đã tồn tại!`
-        );
-        return;
-      }
-
-      const newBlank: Blank = {
-        id: Date.now(),
-        start: actualStart,
-        end: actualEnd,
-        text: selectedTextTrimmed,
-      };
-
-      const placeholder = `{BLANK_${newBlank.id}}`;
-
-      // Use the actual positions for replacement
-      const beforeText = originalSentence.substring(0, actualStart);
-      const afterText = originalSentence.substring(actualEnd);
-      const newSentence = beforeText + placeholder + afterText;
-
-      const newBlanks = [...data.blanks, newBlank];
-
-      onDataChange({
-        blanks: newBlanks,
-        sentence: newSentence,
-        selection: null, // Clear selection after adding
-      });
-    } else {
-      // Just store the selection info for potential use (when just selecting text)
-      onDataChange({
-        selection: selectedText.trim()
-          ? {
-              start,
-              end,
-              text: selectedText.trim(),
-            }
-          : null,
-      });
-    }
+    // Just store the selection info for potential use
+    // Don't process or validate here - wait for explicit "Add to Blank" action
+    onDataChange({
+      selection: selectedText.trim()
+        ? {
+            start,
+            end,
+            text: selectedText.trim(),
+          }
+        : null,
+    });
   };
 
-  // Function to handle clicking on a blank to remove it
-  const handleRemoveBlank = (blankToRemove: Blank) => {
-    const placeholder = `{BLANK_${blankToRemove.id}}`;
+  // This function processes the actual addition to blanks
+  const addSelectedTextToBlank = () => {
+    if (!data.selection) return;
 
-    // Replace the placeholder back with the original text
-    const newSentence = data.sentence.replace(placeholder, blankToRemove.text);
+    const selectedTextTrimmed = data.selection.text;
+    const { start, end } = data.selection;
 
-    // Remove the blank from the array
-    const newBlanks = data.blanks.filter(
-      (blank) => blank.id !== blankToRemove.id
+    const exactMatch = data.blanks.find(
+      (blank) => blank.text === selectedTextTrimmed
     );
+    if (exactMatch) {
+      alert(`"${selectedTextTrimmed}" đã được thêm vào fill-in-blank rồi!`);
+      return;
+    }
 
-    // Update positions of remaining blanks if needed
-    const updatedBlanks = newBlanks.map((blank) => {
-      const blankPlaceholder = `{BLANK_${blank.id}}`;
-      const blankPosition = newSentence.indexOf(blankPlaceholder);
+    const overlappingBlank = data.blanks.find((blank) => {
+      const selectedContainsBlank = selectedTextTrimmed.includes(blank.text);
+      const blankContainsSelected = blank.text.includes(selectedTextTrimmed);
 
-      if (blankPosition !== -1) {
-        return {
-          ...blank,
-          start: blankPosition,
-          end: blankPosition + blank.text.length,
-        };
+      if (selectedContainsBlank || blankContainsSelected) {
+        return true;
       }
 
-      return blank;
+      const selectedStart = start;
+      const selectedEnd = end;
+      const blankStart = blank.start;
+      const blankEnd = blank.end;
+
+      const hasPositionOverlap =
+        selectedStart < blankEnd && selectedEnd > blankStart;
+
+      return hasPositionOverlap;
     });
 
+    if (overlappingBlank) {
+      alert(
+        `"${selectedTextTrimmed}" có chồng lấn với blank "${overlappingBlank.text}" đã tồn tại!`
+      );
+      return;
+    }
+
+    const newBlank: Blank = {
+      id: Date.now(),
+      start,
+      end,
+      text: selectedTextTrimmed,
+    };
+
+    const placeholder = `{BLANK_${newBlank.id}}`;
+
+    const newSentence = data.sentence.replace(selectedTextTrimmed, placeholder);
+
+    const newBlanks = [...data.blanks, newBlank];
+
     onDataChange({
-      blanks: updatedBlanks,
+      blanks: newBlanks,
       sentence: newSentence,
-      selection: null,
+      selection: null, // Clear selection after adding
     });
   };
 
@@ -224,9 +177,7 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
       const blankElement = (
         <span
           key={blank.id}
-          className="inline-flex items-center border px-3 py-1 shadow-md rounded-full relative mr-1 cursor-pointer hover:bg-red-50 hover:border-red-300 transition-colors"
-          onClick={() => handleRemoveBlank(blank)}
-          title="Click to remove this blank and restore original text"
+          className="inline-flex items-center  border px-3 py-1 shadow-md rounded-full  relative mr-1"
         >
           {blank.text}
           <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">

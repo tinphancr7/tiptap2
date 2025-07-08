@@ -11,7 +11,6 @@ interface EditorWithToolbarProps {
   onContentChange?: (content: string) => void;
   onTextSelected?: (selectedText: string, start: number, end: number) => void;
   showAddToBlankButton?: boolean;
-  immediateTextSelection?: boolean; // New prop to control when to call onTextSelected
 }
 
 const EditorWithToolbar: React.FC<EditorWithToolbarProps> = ({
@@ -22,7 +21,6 @@ const EditorWithToolbar: React.FC<EditorWithToolbarProps> = ({
   onContentChange,
   onTextSelected,
   showAddToBlankButton = false,
-  immediateTextSelection = false, // Default to false for backward compatibility
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [selectedText, setSelectedText] = useState<{
@@ -94,10 +92,11 @@ const EditorWithToolbar: React.FC<EditorWithToolbarProps> = ({
       left: rect.left - containerRect.left + rect.width, // Position at the end of selection
     };
   };
+
   const handleTextSelection = (text: string, start: number, end: number) => {
     if (text.trim()) {
-      // Call onTextSelected immediately for components that need it (like ArrangementQuestion)
-      if (immediateTextSelection && onTextSelected) {
+      // Always call the onTextSelected callback if provided
+      if (onTextSelected) {
         onTextSelected(text.trim(), start, end);
       }
 
@@ -115,13 +114,11 @@ const EditorWithToolbar: React.FC<EditorWithToolbarProps> = ({
       }
     } else {
       // Clear selection when no text is selected
-      setSelectedText(null);
-      setTooltipPosition(null);
-
-      // Call onTextSelected with empty values if using immediate selection
-      if (immediateTextSelection && onTextSelected) {
+      if (onTextSelected) {
         onTextSelected("", 0, 0);
       }
+      setSelectedText(null);
+      setTooltipPosition(null);
     }
   };
 
@@ -205,7 +202,7 @@ const EditorWithToolbar: React.FC<EditorWithToolbarProps> = ({
           {showDescriptionToggle && (
             <button
               onClick={handleDescriptionToggle}
-              className="border rounded-full w-fit font-medium shadow-lg  text-sm h-8 px-3 bg-white flex items-center justify-center"
+              className="px-4 py-2 mt-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
             >
               {showDescription ? "Hide Description" : "Show Description"}
             </button>
