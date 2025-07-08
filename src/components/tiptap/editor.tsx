@@ -22,6 +22,7 @@ import StarterKit from "@tiptap/starter-kit";
 import ImageResize from "tiptap-extension-resize-image";
 
 import { FontSize } from "@/extensions/font-size";
+import { Audio } from "@/extensions/audio";
 import { useEditorStore } from "@/store/use-editor-store";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { common, createLowlight } from "lowlight";
@@ -88,6 +89,8 @@ const Editor = ({
       Heading,
       FontFamily,
       Color,
+      Audio,
+
       Placeholder.configure({
         placeholder: placeholder,
       }),

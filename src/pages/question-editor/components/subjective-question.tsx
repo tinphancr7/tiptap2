@@ -1,6 +1,9 @@
-import React, { useState } from "react";
-import EditorWithToolbar from "@/components/tiptap/editor-with-toolbar";
+import Editor from "@/components/tiptap/editor";
+import Toolbar from "@/components/tiptap/toolbar";
 import CustomSwitch from "@/components/ui/custom-switch";
+import React, { useState } from "react";
+import { AiOutlinePlus } from "react-icons/ai";
+import { GrFormViewHide } from "react-icons/gr";
 import type { BaseQuestionData } from "./question-preview";
 import type { QuestionType } from "./types";
 
@@ -112,34 +115,64 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label htmlFor="question" className="text-sm font-medium text-gray-700">
+      <div>
+        <label
+          htmlFor="question"
+          className="text-sm font-medium text-gray-700 mb-2 block"
+        >
           Question
         </label>
-        <EditorWithToolbar
-          placeholder="Enter your question here"
-          showDescriptionToggle={true}
-          onDescriptionToggle={handleQuestionDescriptionToggle}
-          showDescription={showQuestionDescription}
-          onContentChange={handleQuestionContentChange}
-        />
-      </div>
 
-      {showQuestionDescription && (
-        <div className="space-y-2">
-          <label
-            htmlFor="question-description"
-            className="text-sm font-medium text-gray-700"
-          >
-            Description for question
-          </label>
-          <EditorWithToolbar
-            placeholder="Enter description for question"
-            showDescriptionToggle={false}
-            onContentChange={handleQuestionDescriptionChange}
-          />
+        <div className="border rounded-lg ">
+          <Toolbar />
+          <div className="p-3">
+            <Editor
+              placeholder="Enter question here"
+              onContentChange={handleQuestionContentChange}
+            />
+          </div>
         </div>
-      )}
+        {showQuestionDescription ? (
+          <button
+            onClick={() =>
+              handleQuestionDescriptionToggle(!showQuestionDescription)
+            }
+            className=" w-fit font-medium ml-auto  text-sm h-8  flex items-center justify-center gap-1"
+          >
+            <GrFormViewHide size={16} />
+            <span className="underline"> Hide description</span>
+          </button>
+        ) : (
+          <button
+            onClick={() =>
+              handleQuestionDescriptionToggle(!showQuestionDescription)
+            }
+            className=" w-fit font-medium ml-auto  text-sm h-8  flex items-center justify-center gap-1"
+          >
+            <AiOutlinePlus size={16} />
+            <span className="underline"> Add description</span>
+          </button>
+        )}
+        {showQuestionDescription && (
+          <div className="space-y-2">
+            <label
+              htmlFor="question-description"
+              className="text-sm font-medium text-gray-700"
+            >
+              Description for question
+            </label>
+            <div className="border rounded-lg ">
+              <Toolbar />
+              <div className="p-3">
+                <Editor
+                  placeholder="Enter description for question"
+                  onContentChange={handleQuestionDescriptionChange}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="space-y-2">
         <label
@@ -148,58 +181,91 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
         >
           Correct answer
         </label>
-        <EditorWithToolbar
-          placeholder="Enter correct answer here"
-          showDescriptionToggle={true}
-          onDescriptionToggle={handleCorrectAnswerDescriptionToggle}
-          showDescription={showCorrectAnswerDescription}
-          onContentChange={handleCorrectAnswerChange}
-        />
-      </div>
 
-      {showCorrectAnswerDescription && (
-        <div className="space-y-2">
-          <label
-            htmlFor="correct-answer-description"
-            className="text-sm font-medium text-gray-700"
-          >
-            Description for correct answer
-          </label>
-          <EditorWithToolbar
-            placeholder="Enter description for correct answer"
-            showDescriptionToggle={false}
-            onContentChange={handleCorrectAnswerDescriptionChange}
-          />
-        </div>
-      )}
-
-      {/* Character Limit Toggle */}
-      <div className="flex items-center gap-1 p-1 border rounded-full w-fit">
-        {/* Toggle Button */}
-        <CustomSwitch
-          isSelected={characterLimitEnabled}
-          onSelectionChange={handleCharacterLimitToggle}
-          label="Character limit"
-          className="w-[148px]"
-          selectedColor="#0958D9"
-          unselectedColor="#d1d5db"
-        />
-
-        {characterLimitEnabled && (
-          <div className="flex items-center  px-1">
-            <input
-              type="number"
-              value={characterLimit}
-              onChange={(e) =>
-                handleCharacterLimitChange(Math.max(0, Number(e.target.value)))
-              }
-              className="w-10 h-7 border-0 border-b border-gray-500 rounded-none bg-transparent focus:ring-0 focus:ring-offset-0 text-center text-base font-semibold outline-none"
+        <div className="border rounded-lg ">
+          <Toolbar />
+          <div className="p-3">
+            <Editor
+              placeholder="Enter correct answer here"
+              onContentChange={handleCorrectAnswerChange}
             />
-            <span className="text-base text-gray-700 font-normal ">
-              characters
-            </span>
+          </div>
+        </div>
+        {showCorrectAnswerDescription ? (
+          <button
+            onClick={() =>
+              handleCorrectAnswerDescriptionToggle(
+                !showCorrectAnswerDescription
+              )
+            }
+            className=" w-fit font-medium ml-auto  text-sm h-8  flex items-center justify-center gap-1"
+          >
+            <GrFormViewHide size={16} />
+            <span className="underline"> Hide description</span>
+          </button>
+        ) : (
+          <button
+            onClick={() =>
+              handleCorrectAnswerDescriptionToggle(
+                !showCorrectAnswerDescription
+              )
+            }
+            className=" w-fit font-medium ml-auto  text-sm h-8  flex items-center justify-center gap-1"
+          >
+            <AiOutlinePlus size={16} />
+            <span className="underline"> Add description</span>
+          </button>
+        )}
+        {showCorrectAnswerDescription && (
+          <div className="space-y-2">
+            <label
+              htmlFor="correct-answer-description"
+              className="text-sm font-medium text-gray-700"
+            >
+              Description for correct answer
+            </label>
+
+            <div className="border rounded-lg ">
+              <Toolbar />
+              <div className="p-3">
+                <Editor
+                  placeholder="Enter description for correct answer"
+                  onContentChange={handleCorrectAnswerDescriptionChange}
+                />
+              </div>
+            </div>
           </div>
         )}
+        {/* Character Limit Toggle */}
+        <div className="flex items-center gap-1 p-1 border rounded-full w-fit">
+          {/* Toggle Button */}
+          <CustomSwitch
+            isSelected={characterLimitEnabled}
+            onSelectionChange={handleCharacterLimitToggle}
+            label="Character limit"
+            className="w-[148px]"
+            selectedColor="#0958D9"
+            unselectedColor="#d1d5db"
+          />
+
+          {characterLimitEnabled && (
+            <div className="flex items-center  px-1">
+              <input
+                type="number"
+                value={characterLimit}
+                onChange={(e) =>
+                  handleCharacterLimitChange(
+                    Math.max(0, Number(e.target.value))
+                  )
+                }
+                className="w-10 h-7 border-0 border-b border-gray-500 rounded-none bg-transparent focus:ring-0 focus:ring-offset-0 text-center text-base font-semibold outline-none"
+              />
+              <span className="text-base text-gray-700 font-normal ">
+                characters
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -19,11 +19,10 @@ import {
   PopoverTrigger,
 } from "@heroui/react";
 import { useState, type FC, type ReactElement } from "react";
+import React from "react";
 import { CirclePicker, SketchPicker, type ColorResult } from "react-color";
 import { type IconType } from "react-icons";
 import {
-  MdChecklist,
-  MdCode,
   MdFormatAlignCenter,
   MdFormatAlignJustify,
   MdFormatAlignLeft,
@@ -38,11 +37,9 @@ import {
   MdHighlight,
   MdImage,
   MdKeyboardArrowDown,
-  MdLink,
-  MdRedo,
   MdSearch,
-  MdUndo,
   MdUpload,
+  MdVolumeUp,
 } from "react-icons/md";
 import { PiLinkSimpleBold } from "react-icons/pi";
 const FontSizeButton = () => {
@@ -298,49 +295,274 @@ const ImageButton = () => {
   );
 };
 
-const LinkButton = () => {
+const AudioButton = () => {
   const { editor } = useEditorStore();
-  const [value, setValue] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [audioUrl, setAudioUrl] = useState("");
 
-  const onChange = (href: string) => {
-    editor?.chain().focus().extendMarkRange("link").setLink({ href }).run();
-    setValue("");
+  const onChange = (src: string) => {
+    // Use the custom Audio extension command
+    editor?.chain().focus().setAudio({ src }).run();
+  };
+
+  const onUpload = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "audio/*";
+
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const audioUrl = URL.createObjectURL(file);
+        onChange(audioUrl);
+      }
+    };
+
+    input.click();
+  };
+
+  const handleAudioUrlSubmit = () => {
+    if (audioUrl) {
+      onChange(audioUrl);
+      setAudioUrl("");
+      setIsDialogOpen(false);
+    }
   };
 
   return (
-    <Popover placement="bottom" showArrow={true}>
+    <>
+      <Dropdown>
+        <DropdownTrigger>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            className="h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-50 px-2 overflow-hidden text-sm transition-colors"
+          >
+            <MdVolumeUp className={"size-5"} />
+          </button>
+        </DropdownTrigger>
+        <DropdownMenu>
+          <DropdownItem key="upload" onPress={onUpload}>
+            <div className="flex items-center gap-2">
+              <MdUpload className="h-4 w-4" />
+              Upload
+            </div>
+          </DropdownItem>
+          <DropdownItem key="paste-url" onPress={() => setIsDialogOpen(true)}>
+            <div className="flex items-center gap-2">
+              <MdSearch className="h-4 w-4" />
+              Paste audio URL
+            </div>
+          </DropdownItem>
+        </DropdownMenu>
+      </Dropdown>
+
+      <Modal isOpen={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <ModalContent>
+          {() => (
+            <>
+              <ModalHeader>
+                <h4>Paste audio URL</h4>
+              </ModalHeader>
+              <ModalBody>
+                <Input
+                  placeholder="Insert audio URL"
+                  value={audioUrl}
+                  onChange={(e) => setAudioUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAudioUrlSubmit()}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button color="primary" onPress={handleAudioUrlSubmit}>
+                  Insert
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+    </>
+  );
+};
+
+const LinkButton = () => {
+  const { editor } = useEditorStore();
+  const [url, setUrl] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Get current link attributes if editing existing link
+  const currentLink = editor?.getAttributes("link");
+  const isLinkActive = editor?.isActive("link");
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (open) {
+      // If editing existing link, populate field
+      if (isLinkActive && currentLink?.href) {
+        setUrl(currentLink.href);
+      } else {
+        setUrl("");
+      }
+    } else {
+      // Clear field when closing
+      setUrl("");
+    }
+  };
+
+  const handleApply = () => {
+    if (!url.trim()) return;
+
+    // Add protocol if missing
+    const finalUrl =
+      url.startsWith("http://") || url.startsWith("https://")
+        ? url
+        : `https://${url}`;
+
+    // Get current selection
+    const { from, to } = editor?.state.selection || { from: 0, to: 0 };
+    const hasSelection = from !== to;
+
+    if (hasSelection || isLinkActive) {
+      // If we have selection or editing existing link, apply/update link
+      editor
+        ?.chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({ href: finalUrl })
+        .run();
+    } else {
+      // Insert the URL as text with link if no selection
+      editor
+        ?.chain()
+        .focus()
+        .insertContent(`<a href="${finalUrl}">${finalUrl}</a>`)
+        .run();
+    }
+
+    setIsOpen(false);
+    setUrl("");
+  };
+
+  const handleRemoveLink = () => {
+    editor?.chain().focus().unsetLink().run();
+    setIsOpen(false);
+    setUrl("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleApply();
+    }
+    if (e.key === "Escape") {
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <Popover
+      isOpen={isOpen}
+      onOpenChange={handleOpenChange}
+      placement="bottom"
+      showArrow={false}
+      classNames={{
+        content:
+          "p-2 min-w-[320px] bg-white border border-gray-200 rounded-lg shadow-lg",
+      }}
+    >
       <PopoverTrigger>
         <button
           onMouseDown={(e) => e.preventDefault()}
-          className="h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-50 px-2 overflow-hidden text-sm transition-colors"
+          className={cn(
+            "h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-50 px-2 overflow-hidden text-sm transition-colors",
+            isLinkActive && "bg-blue-100 text-blue-600"
+          )}
         >
           <PiLinkSimpleBold className={"size-5"} />
         </button>
       </PopoverTrigger>
       <PopoverContent>
-        <div className="flex  gap-3 w-full">
-          <Input
-            placeholder="https://"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && value) {
-                onChange(value);
-              }
-            }}
-            className="w-full"
-            variant="bordered"
-            size="sm"
-          />
-          <Button
-            onPress={() => onChange(value)}
-            isDisabled={!value}
-            color="primary"
-            size="sm"
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            Apply
-          </Button>
+        <div className="flex items-center gap-2 ">
+          <div className="flex-1">
+            <Input
+              placeholder="Paste a link..."
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={handleKeyDown}
+              size="sm"
+              variant="faded"
+              className="w-full"
+              classNames={{
+                input: "text-sm placeholder:text-gray-400 bg-transparent",
+                inputWrapper: "bg-gray-50 border-none h-8 min-h-8 ",
+              }}
+            />
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleApply}
+              disabled={!url.trim()}
+              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Apply link"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </button>
+
+            <button
+              onClick={() => window.open(url, "_blank")}
+              disabled={!url.trim()}
+              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Open link in new tab"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+            </button>
+
+            {isLinkActive && (
+              <button
+                onClick={handleRemoveLink}
+                className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-gray-100 text-red-500"
+                title="Remove link"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
       </PopoverContent>
     </Popover>
@@ -553,7 +775,7 @@ const Toolbar = () => {
   ];
 
   return (
-    <div className="bg-[#F0F0F0] rounded-t-lg  min-h-10 flex items-center justify-center gap-x-1 gap-y-1 overflow-hidden">
+    <div className="bg-[#F0F0F0] rounded-t-lg  min-h-12 flex items-center justify-center gap-x-1 gap-y-1 overflow-hidden">
       {section.map((item) => (
         <ToolbarButton key={item.label} {...item} />
       ))}
@@ -565,6 +787,7 @@ const Toolbar = () => {
       <TextColorButton />
       <HighlightColorButton />
       <ImageButton />
+      <AudioButton />
       <ListButton />
     </div>
   );

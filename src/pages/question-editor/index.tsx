@@ -40,7 +40,7 @@ export default function QuestionEditor() {
   // Editor state
   const [editorState, setEditorState] = useState<EditorState>({
     activeEditor: null,
-    questionType: "fill-in-blank", // Default to fill-in-blank question type
+    questionType: "question-group", // Default to question group type
   });
 
   // Category state - use data from router

@@ -377,7 +377,7 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
   };
 
   return (
-    <>
+    <div className="space-y-4">
       <div className="space-y-2 ">
         <label className="text-sm font-medium ">Description/Question</label>
         <div className="relative" ref={containerRef}>
@@ -423,32 +423,19 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
                 </div>
               </div>
             )}
-            {showFillInBlankDescription ? (
-              <button
-                onClick={() =>
-                  handleFillInBlankDescriptionToggle(
-                    !showFillInBlankDescription
-                  )
-                }
-                className=" w-fit font-medium ml-auto  text-sm h-8  flex items-center justify-center gap-1"
-              >
-                <GrFormViewHide size={16} />
-                <span className="underline"> Hide description</span>
-              </button>
-            ) : (
-              <button
-                onClick={() =>
-                  handleFillInBlankDescriptionToggle(
-                    !showFillInBlankDescription
-                  )
-                }
-                className=" w-fit font-medium ml-auto  text-sm h-8  flex items-center justify-center gap-1"
-              >
-                <AiOutlinePlus size={16} />
-                <span className="underline"> Add description</span>
-              </button>
-            )}
-            {/* <button
+          </div>
+          {showFillInBlankDescription ? (
+            <button
+              onClick={() =>
+                handleFillInBlankDescriptionToggle(!showFillInBlankDescription)
+              }
+              className=" w-fit font-medium ml-auto  text-sm h-8  flex items-center justify-center gap-1"
+            >
+              <GrFormViewHide size={16} />
+              <span className="underline"> Hide description</span>
+            </button>
+          ) : (
+            <button
               onClick={() =>
                 handleFillInBlankDescriptionToggle(!showFillInBlankDescription)
               }
@@ -456,13 +443,13 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
             >
               <AiOutlinePlus size={16} />
               <span className="underline"> Add description</span>
-            </button> */}
-          </div>
+            </button>
+          )}
         </div>
       </div>
 
       {showFillInBlankDescription && (
-        <div className="space-y-4">
+        <div className="space-y-2">
           <label
             htmlFor="fill-in-blank-description"
             className="text-sm font-medium "
@@ -553,6 +540,6 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
