@@ -14,12 +14,14 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@heroui/react";
 import { useState, type FC, type ReactElement } from "react";
 import { CirclePicker, SketchPicker, type ColorResult } from "react-color";
 import { type IconType } from "react-icons";
 import {
-  MdAdd,
   MdChecklist,
   MdCode,
   MdFormatAlignCenter,
@@ -38,12 +40,11 @@ import {
   MdKeyboardArrowDown,
   MdLink,
   MdRedo,
-  MdRemove,
   MdSearch,
   MdUndo,
   MdUpload,
 } from "react-icons/md";
-
+import { PiLinkSimpleBold } from "react-icons/pi";
 const FontSizeButton = () => {
   const { editor } = useEditorStore();
 
@@ -51,102 +52,57 @@ const FontSizeButton = () => {
     ? editor?.getAttributes("textStyle").fontSize.replace("px", "")
     : "16";
 
-  const [fontSize, setFontSize] = useState(currentFontSize);
-  const [inputValue, setInputValue] = useState(currentFontSize);
-  const [isEditing, setIsEditing] = useState(false);
-
-  if (currentFontSize !== fontSize) {
-    setFontSize(currentFontSize);
-    setInputValue(currentFontSize);
-  }
+  const fontSizes = [
+    { label: "8", value: "8" },
+    { label: "9", value: "9" },
+    { label: "10", value: "10" },
+    { label: "11", value: "11" },
+    { label: "12", value: "12" },
+    { label: "14", value: "14" },
+    { label: "16", value: "16" },
+    { label: "18", value: "18" },
+    { label: "20", value: "20" },
+    { label: "24", value: "24" },
+    { label: "28", value: "28" },
+    { label: "32", value: "32" },
+    { label: "36", value: "36" },
+    { label: "48", value: "48" },
+    { label: "72", value: "72" },
+  ];
 
   const updateFontSize = (newSize: string) => {
     const size = parseInt(newSize);
     if (!isNaN(size) && size > 0) {
-      setFontSize(newSize);
-      setInputValue(newSize);
-      setIsEditing(false);
       editor?.commands.setFontSize(`${size}px`);
     }
   };
 
-  // function change fontSize
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
-
-  const handleInputBlur = () => {
-    updateFontSize(inputValue);
-  };
-
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      updateFontSize(inputValue);
-      editor?.commands.focus();
-    }
-  };
-
-  const increment = () => {
-    updateFontSize((parseInt(fontSize) + 1).toString());
-  };
-
-  const decrement = () => {
-    const newSize = parseInt(fontSize) - 1;
-    if (newSize > 0) {
-      updateFontSize(newSize.toString());
-    }
-  };
-
   return (
-    <div className="flex items-center gap-x-1">
-      <button
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          decrement();
-        }}
-        className="size-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors"
-      >
-        <MdRemove className="size-4" />
-      </button>
-      {isEditing ? (
-        <input
-          type="text"
-          autoFocus
-          value={inputValue}
-          onChange={handleInputChange}
-          onBlur={handleInputBlur}
-          onKeyDown={handleInputKeyDown}
-          className="h-8 w-12 text-sm border border-gray-300 text-center rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      ) : (
+    <Dropdown>
+      <DropdownTrigger>
         <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsEditing(true);
-            setFontSize(currentFontSize);
-          }}
           onMouseDown={(e) => e.preventDefault()}
-          className="h-8 w-12 text-sm border border-gray-300 text-center rounded-md cursor-text hover:bg-gray-50 transition-colors"
+          className="h-8 w-14 bg-white shadow-sm shrink-0 flex items-center justify-center rounded-full hover:bg-gray-50 text-sm border border-gray-300 transition-colors"
         >
-          {fontSize}
+          <span className="text-center">{currentFontSize}</span>
+          <MdKeyboardArrowDown className="size-5 ml-2 shrink-0" />
         </button>
-      )}
-      <button
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          increment();
-        }}
-        className="size-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors"
-      >
-        <MdAdd className="size-4" />
-      </button>
-    </div>
+      </DropdownTrigger>
+      <DropdownMenu>
+        {fontSizes.map(({ label, value }) => (
+          <DropdownItem
+            key={value}
+            onPress={() => updateFontSize(value)}
+            className={cn(
+              "flex items-center justify-center px-2 py-1 rounded-sm hover:bg-gray-50",
+              currentFontSize === value && "bg-gray-200"
+            )}
+          >
+            <span className="text-sm">{label}</span>
+          </DropdownItem>
+        ))}
+      </DropdownMenu>
+    </Dropdown>
   );
 };
 
@@ -173,9 +129,9 @@ const ListButton = () => {
       <DropdownTrigger>
         <button
           onMouseDown={(e) => e.preventDefault()}
-          className="h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-100 px-2 overflow-hidden text-sm transition-colors"
+          className="h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-50 px-2 overflow-hidden text-sm transition-colors"
         >
-          <MdFormatListBulleted className="size-4" />
+          <MdFormatListBulleted className="size-5" />
         </button>
       </DropdownTrigger>
       <DropdownMenu>
@@ -184,10 +140,10 @@ const ListButton = () => {
             key={label}
             onPress={onClick}
             className={cn(
-              "flex items-center w-full hover:bg-gray-100",
+              "flex items-center w-full hover:bg-gray-50",
               isActive() && "bg-gray-200"
             )}
-            startContent={<Icon className="size-4" />}
+            startContent={<Icon className="size-5" />}
           >
             <span className="text-sm">{label}</span>
           </DropdownItem>
@@ -228,9 +184,9 @@ const AlignButton = () => {
       <DropdownTrigger>
         <button
           onMouseDown={(e) => e.preventDefault()}
-          className="h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-100 px-2 overflow-hidden text-sm transition-colors"
+          className="h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-50 px-2 overflow-hidden text-sm transition-colors"
         >
-          <MdFormatAlignLeft className={"size-4"} />
+          <MdFormatAlignLeft className={"size-5"} />
         </button>
       </DropdownTrigger>
       <DropdownMenu>
@@ -241,10 +197,10 @@ const AlignButton = () => {
               editor?.chain().focus().setTextAlign(value).run();
             }}
             className={cn(
-              "flex items-center gap-x-2 px-2 py-1 w-full hover:bg-gray-100",
+              "flex items-center gap-x-2 px-2 py-1 w-full hover:bg-gray-50",
               editor?.isActive("textAlign", { value }) && "bg-gray-200"
             )}
-            startContent={<Icon className="size-4" />}
+            startContent={<Icon className="size-5" />}
           >
             <span className="text-sm">{label}</span>
           </DropdownItem>
@@ -293,9 +249,9 @@ const ImageButton = () => {
         <DropdownTrigger>
           <button
             onMouseDown={(e) => e.preventDefault()}
-            className="h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-100 px-2 overflow-hidden text-sm transition-colors"
+            className="h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-50 px-2 overflow-hidden text-sm transition-colors"
           >
-            <MdImage className={"size-4"} />
+            <MdImage className={"size-5"} />
           </button>
         </DropdownTrigger>
         <DropdownMenu>
@@ -350,32 +306,44 @@ const LinkButton = () => {
     editor?.chain().focus().extendMarkRange("link").setLink({ href }).run();
     setValue("");
   };
+
   return (
-    <Dropdown>
-      <DropdownTrigger>
+    <Popover placement="bottom" showArrow={true}>
+      <PopoverTrigger>
         <button
           onMouseDown={(e) => e.preventDefault()}
-          className="h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-100 px-2 overflow-hidden text-sm transition-colors"
+          className="h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-50 px-2 overflow-hidden text-sm transition-colors"
         >
-          <MdLink className={"size-4"} />
+          <PiLinkSimpleBold className={"size-5"} />
         </button>
-      </DropdownTrigger>
-      <DropdownMenu>
-        <DropdownItem
-          key="link-input"
-          className="p-2.5 flex items-center gap-x-2"
-        >
+      </PopoverTrigger>
+      <PopoverContent>
+        <div className="flex  gap-3 w-full">
           <Input
             placeholder="https://"
             value={value}
             onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && value) {
+                onChange(value);
+              }
+            }}
+            className="w-full"
+            variant="bordered"
+            size="sm"
           />
-          <Button onPress={() => onChange(value)} isDisabled={!value}>
+          <Button
+            onPress={() => onChange(value)}
+            isDisabled={!value}
+            color="primary"
+            size="sm"
+            className="bg-blue-600 hover:bg-blue-700"
+          >
             Apply
           </Button>
-        </DropdownItem>
-      </DropdownMenu>
-    </Dropdown>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 };
 
@@ -391,9 +359,9 @@ const HighlightColorButton = () => {
       <DropdownTrigger>
         <button
           onMouseDown={(e) => e.preventDefault()}
-          className="h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-100 px-2 overflow-hidden text-sm transition-colors"
+          className="h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-50 px-2 overflow-hidden text-sm transition-colors"
         >
-          <MdHighlight className={"size-4"} />
+          <MdHighlight className={"size-5"} />
         </button>
       </DropdownTrigger>
       <DropdownMenu>
@@ -418,96 +386,15 @@ const TextColorButton = () => {
       <DropdownTrigger>
         <button
           onMouseDown={(e) => e.preventDefault()}
-          className="h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-100 px-2 overflow-hidden text-sm transition-colors"
+          className="h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-50 px-2 overflow-hidden text-sm transition-colors"
         >
-          <MdFormatColorText className="size-4" style={{ color: value }} />
+          <MdFormatColorText className="size-5" style={{ color: value }} />
         </button>
       </DropdownTrigger>
       <DropdownMenu>
         <DropdownItem key="color-picker" className="p-2.5">
           <CirclePicker color={value} onChange={onChange} />
         </DropdownItem>
-      </DropdownMenu>
-    </Dropdown>
-  );
-};
-
-const HeadingLevelButton = () => {
-  const { editor } = useEditorStore();
-
-  const headings = [
-    {
-      label: "Normal text",
-      value: 0,
-      fontSize: "16px",
-    },
-    {
-      label: "Heading 1",
-      value: 1,
-      fontSize: "32px",
-    },
-    {
-      label: "Heading 2",
-      value: 2,
-      fontSize: "24px",
-    },
-    {
-      label: "Heading 3",
-      value: 3,
-      fontSize: "20px",
-    },
-    {
-      label: "Heading 4",
-      value: 4,
-      fontSize: "18px",
-    },
-    {
-      label: "Heading 5",
-      value: 5,
-      fontSize: "16px",
-    },
-  ];
-
-  return (
-    <Dropdown>
-      <DropdownTrigger>
-        <button
-          onMouseDown={(e) => e.preventDefault()}
-          className="h-8 w-[100px] shrink-0 flex items-center justify-center rounded-md hover:bg-gray-100 px-3 overflow-hidden text-sm border border-gray-300 transition-colors"
-        >
-          <span className="truncate flex items-center">
-            <span className="text-lg font-bold mr-1">H</span>
-            <MdKeyboardArrowDown className="size-4" />
-          </span>
-        </button>
-      </DropdownTrigger>
-      <DropdownMenu>
-        {headings.map(({ label, value, fontSize }) => (
-          <DropdownItem
-            key={value}
-            onPress={() => {
-              if (value === 0) {
-                editor?.chain().focus().setParagraph().run();
-                return;
-              } else {
-                editor
-                  ?.chain()
-                  .focus()
-                  .toggleHeading({ level: value as 1 | 2 | 3 | 4 | 5 })
-                  .run();
-              }
-            }}
-            className={cn(
-              "flex items-center gap-x-2 px-2 py-1 rounded-sm hover:bg-gray-100",
-              ((value === 0 && !editor?.isActive("heading")) ||
-                editor?.isActive("heading", { level: value })) &&
-                "bg-gray-200"
-            )}
-            style={{ fontSize }}
-          >
-            {label}
-          </DropdownItem>
-        ))}
       </DropdownMenu>
     </Dropdown>
   );
@@ -564,12 +451,12 @@ const FontFamilyButton = () => {
       <DropdownTrigger>
         <button
           onMouseDown={(e) => e.preventDefault()}
-          className="h-8 w-24 shrink-0 flex items-center justify-between rounded-md hover:bg-gray-100 px-3 overflow-hidden text-sm border border-gray-300 transition-colors"
+          className="h-8 w-24 bg-white shadow-sm shrink-0 flex items-center justify-between rounded-full hover:bg-gray-50 px-3 overflow-hidden text-sm border border-gray-300 transition-colors"
         >
           <span className="truncate">
             {editor?.getAttributes("textStyle").fontFamily || "Roboto"}
           </span>
-          <MdKeyboardArrowDown className="size-4 ml-2 shrink-0" />
+          <MdKeyboardArrowDown className="size-5 ml-2 shrink-0" />
         </button>
       </DropdownTrigger>
       <DropdownMenu>
@@ -580,9 +467,9 @@ const FontFamilyButton = () => {
               editor?.chain().focus().setFontFamily(value).run();
             }}
             className={cn(
-              "flex items-center gap-x-2 px-2 py-1 rounded-sm hover:bg-gray-100",
+              "flex items-center gap-x-2 px-2 py-1 rounded-sm hover:bg-gray-50",
               editor?.getAttributes("textStyle").fontFamily === value &&
-                "bg-gray-200"
+                "hover:bg-gray-50"
             )}
             style={{ fontFamily: value }}
           >
@@ -614,11 +501,11 @@ const ToolbarButton: FC<ToolbarButtonProps> = ({
       }}
       onMouseDown={(e) => e.preventDefault()}
       className={cn(
-        "text-sm h-8 w-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors",
-        isActive && "bg-gray-200 text-gray-900"
+        "text-sm h-8 w-8 flex items-center justify-center rounded-md hover:bg-gray-50 transition-colors",
+        isActive && "bg-gray-50 text-gray-900"
       )}
     >
-      <Icon className="size-4" />
+      <Icon className="size-5" />
     </button>
   );
 };
@@ -631,98 +518,54 @@ const Toolbar = () => {
     icon: IconType;
     onClick: () => void;
     isActive?: boolean;
-  }[][] = [
-    [
-      {
-        label: "Undo",
-        icon: MdUndo,
-        onClick: () => {
-          editor?.chain().focus().undo().run();
-        },
+  }[] = [
+    {
+      label: "Bold",
+      icon: MdFormatBold,
+      isActive: editor?.isActive("bold"),
+      onClick: () => {
+        editor?.chain().focus().toggleBold().run();
       },
-      {
-        label: "Redo",
-        icon: MdRedo,
-        onClick: () => {
-          editor?.chain().focus().redo().run();
-        },
+    },
+    {
+      label: "Italic",
+      icon: MdFormatItalic,
+      isActive: editor?.isActive("italic"),
+      onClick: () => {
+        editor?.chain().focus().toggleItalic().run();
       },
+    },
+    {
+      label: "Underline",
+      icon: MdFormatUnderlined,
+      isActive: editor?.isActive("underline"),
+      onClick: () => {
+        editor?.chain().focus().toggleUnderline().run();
+      },
+    },
 
-      {
-        label: "Code Block",
-        icon: MdCode,
-        onClick: () => {
-          editor?.chain().focus().toggleCodeBlock().run();
-        },
-      },
-    ],
-    [
-      {
-        label: "Bold",
-        icon: MdFormatBold,
-        isActive: editor?.isActive("bold"),
-        onClick: () => {
-          editor?.chain().focus().toggleBold().run();
-        },
-      },
-      {
-        label: "Italic",
-        icon: MdFormatItalic,
-        isActive: editor?.isActive("italic"),
-        onClick: () => {
-          editor?.chain().focus().toggleItalic().run();
-        },
-      },
-      {
-        label: "Underline",
-        icon: MdFormatUnderlined,
-        isActive: editor?.isActive("underline"),
-        onClick: () => {
-          editor?.chain().focus().toggleUnderline().run();
-        },
-      },
-    ],
-    [
-      {
-        label: "List Todo",
-        icon: MdChecklist,
-        onClick: () => editor?.chain().focus().toggleTaskList().run(),
-        isActive: editor?.isActive("taskList"),
-      },
-      {
-        label: "Remove Formatting",
-        icon: MdFormatClear,
-        onClick: () => editor?.chain().focus().unsetAllMarks().run(),
-        isActive: editor?.isActive("removeFormatting"),
-      },
-    ],
+    {
+      label: "Remove Formatting",
+      icon: MdFormatClear,
+      onClick: () => editor?.chain().focus().unsetAllMarks().run(),
+      isActive: editor?.isActive("removeFormatting"),
+    },
   ];
 
   return (
-    <div className="bg-white min-h-10 flex flex-wrap items-center gap-x-1 gap-y-1 overflow-hidden">
-      {section[0].map((item) => (
+    <div className="bg-[#F0F0F0] rounded-t-lg  min-h-10 flex items-center justify-center gap-x-1 gap-y-1 overflow-hidden">
+      {section.map((item) => (
         <ToolbarButton key={item.label} {...item} />
       ))}
 
       <FontFamilyButton />
-
-      <HeadingLevelButton />
-
+      <LinkButton />
+      <AlignButton />
       <FontSizeButton />
-
-      {section[1].map((item) => (
-        <ToolbarButton key={item.label} {...item} />
-      ))}
       <TextColorButton />
       <HighlightColorButton />
-
-      <LinkButton />
       <ImageButton />
-      <AlignButton />
       <ListButton />
-      {section[2].map((item) => (
-        <ToolbarButton key={item.label} {...item} />
-      ))}
     </div>
   );
 };

@@ -76,13 +76,16 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
         const blankElement = (
           <span
             key={blank.id}
-            className="inline-block mx-1 relative"
+            className="inline-block relative"
             style={{ verticalAlign: "baseline" }}
           >
-            <span className="text-xs text-gray-600 absolute  left-1/2 transform -translate-x-1/2">
+            <span className="text-xs text-gray-500 absolute left-1/2 transform -translate-x-1/2 ">
               ({blankNumber})
             </span>
-            <span className="border-b-2 border-gray-800 w-16 inline-block" />
+            <span
+              className="border-b-2 border-gray-600 inline-block min-w-[40px]"
+              style={{ width: `${Math.max(blank.text.length * 8, 40)}px` }}
+            />
           </span>
         );
 
@@ -110,36 +113,65 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
     };
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 ">
         <div>
-          <h3 className="font-semibold text-lg mb-4">Fill in blank</h3>
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-4 text-lg leading-9">
-            {renderSentenceWithBlanks()}
-          </div>
-          {fillInBlankData.showFillInBlankDescription &&
-            fillInBlankData.fillInBlankDescription && (
+          <h3 className="font-semibold text-lg mb-2">Fill in blank</h3>
+          <div>{renderSentenceWithBlanks()}</div>
+        </div>
+        {fillInBlankData.showFillInBlankDescription &&
+          fillInBlankData.fillInBlankDescription && (
+            <div>
+              <h5 className="font-medium text-sm">
+                Description for fill in blank:
+              </h5>
               <div
-                className="mt-2 text-gray-600 text-sm break-words prose prose-sm max-w-none"
+                className="text-gray-600  break-words prose prose-sm max-w-none"
                 dangerouslySetInnerHTML={{
                   __html: fillInBlankData.fillInBlankDescription,
                 }}
               />
-            )}
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-          {sortedBlanks.map((blank, idx) => (
-            <div key={blank.id} className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">({idx + 1})</span>
-              <Input
-                type="text"
-                placeholder="Enter answer"
-                value={blank.text}
-                readOnly
-                className="w-full"
+            </div>
+          )}
+        {sortedBlanks.length > 0 && (
+          <div className="space-y-2">
+            <h5 className="font-medium text-sm">Correct Answer:</h5>
+            <div
+              className={`${
+                fillInBlankData.answerLayout === "horizontal"
+                  ? "grid grid-cols-1 sm:grid-cols-3 gap-4"
+                  : "flex flex-col gap-3"
+              }`}
+            >
+              {sortedBlanks.map((blank, idx) => (
+                <div key={blank.id} className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">({idx + 1})</span>
+                  <Input
+                    type="text"
+                    placeholder="Enter answer"
+                    value={blank.text}
+                    readOnly
+                    className="w-fit"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {fillInBlankData.showCorrectAnswerFillInBlankDescription &&
+          fillInBlankData.correctAnswerFillInBlankDescription && (
+            <div className="space-y-2">
+              <h5 className="font-medium text-sm mb-2">
+                Explanation for Correct Answer:
+              </h5>
+              <div
+                className="text-gray-600 text-sm break-words prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{
+                  __html: fillInBlankData.correctAnswerFillInBlankDescription,
+                }}
               />
             </div>
-          ))}
-        </div>
+          )}
       </div>
     );
   };
@@ -333,7 +365,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Question
             </label>
-            <div className="tiptap">
+            <div className="">
               <div
                 dangerouslySetInnerHTML={{ __html: baseData.questionTitle }}
               />
@@ -346,7 +378,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Description for question
                   </label>
-                  <div className="tiptap">
+                  <div className="">
                     <div
                       dangerouslySetInnerHTML={{
                         __html: baseData.questionDescription,
@@ -364,7 +396,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Correct answer
             </label>
-            <div className="tiptap">
+            <div className="">
               <div
                 dangerouslySetInnerHTML={{ __html: baseData.correctAnswer }}
               />
@@ -377,7 +409,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Description for correct answer
                   </label>
-                  <div className="tiptap">
+                  <div className="">
                     <div
                       dangerouslySetInnerHTML={{
                         __html: baseData.correctAnswerDescription,
@@ -393,7 +425,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
   };
 
   return (
-    <div className="sticky  p-5 bg-white">
+    <div className="sticky tiptap p-5 bg-white">
       <h2 className="text-lg font-semibold mb-4">Live Preview</h2>
       {questionType === "fill-in-blank"
         ? renderFillInBlankPreview()

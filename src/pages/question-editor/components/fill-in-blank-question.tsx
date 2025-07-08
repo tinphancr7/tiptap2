@@ -1,7 +1,10 @@
-import EditorWithToolbar from "@/components/tiptap/editor-with-toolbar";
-import React, { useState } from "react";
+import Editor from "@/components/tiptap/editor";
+import Toolbar from "@/components/tiptap/toolbar";
+import { Button } from "@heroui/react";
+import React, { useState, useRef, useEffect } from "react";
 import { MdSwapHoriz, MdSwapVert } from "react-icons/md";
-
+import { AiOutlinePlus } from "react-icons/ai";
+import { GrFormViewHide } from "react-icons/gr";
 export type Blank = {
   id: number;
   start: number;
@@ -44,6 +47,18 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
   const [showCorrectAnswerDescription, setShowCorrectAnswerDescription] =
     useState(data.showCorrectAnswerFillInBlankDescription);
 
+  // Text selection logic for fill-in-blank
+  const [selectedText, setSelectedText] = useState<{
+    text: string;
+    start: number;
+    end: number;
+  } | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const handleFillInBlankDescriptionToggle = (show: boolean) => {
     setShowFillInBlankDescription(show);
     onDataChange({ showFillInBlankDescription: show });
@@ -67,6 +82,77 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
     onDataChange({ correctAnswerFillInBlankDescription: content });
   };
 
+  // Helper function to get selection position for tooltip
+  const getSelectionBoundingRect = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return null;
+
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+
+    // Get container position for relative positioning
+    const containerRect = containerRef.current?.getBoundingClientRect();
+    if (!containerRect) return null;
+
+    return {
+      top: rect.top - containerRect.top - 45, // Position above the selection
+      left: rect.left - containerRect.left + rect.width, // Position at the end of selection
+    };
+  };
+
+  // Handle text selection for fill-in-blank
+  const handleTextSelection = (text: string, start: number, end: number) => {
+    if (text.trim()) {
+      // Show tooltip for fill-in-blank functionality
+      setSelectedText({ text: text.trim(), start, end });
+
+      // Get selection position after a small delay to ensure DOM is updated
+      setTimeout(() => {
+        const position = getSelectionBoundingRect();
+        if (position) {
+          setTooltipPosition(position);
+        }
+      }, 10);
+    } else {
+      // Clear selection when no text is selected
+      setSelectedText(null);
+      setTooltipPosition(null);
+    }
+  };
+
+  // Handle adding selected text to blank
+  const handleAddToBlank = () => {
+    if (selectedText) {
+      handleTextSelected(
+        selectedText.text,
+        selectedText.start,
+        selectedText.end
+      );
+      setSelectedText(null);
+      setTooltipPosition(null);
+    }
+  };
+
+  // Handle click outside to close tooltip
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(target) &&
+        !target.closest(".selection-tooltip")
+      ) {
+        setSelectedText(null);
+        setTooltipPosition(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // This function is called when text is selected OR when "Add to Blank" is clicked
   const handleTextSelected = (
     selectedText: string,
@@ -77,49 +163,84 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
     if (selectedText.trim() && start >= 0 && end > start) {
       // Process the addition to blanks
       const selectedTextTrimmed = selectedText.trim();
+      const currentSentence = data.sentence;
 
-      // Find the exact position of the selected text in the original sentence
-      const originalSentence = data.sentence;
-      const selectedTextIndex = originalSentence.indexOf(selectedTextTrimmed);
+      // We'll check for exact position duplicates later, not just text duplicates
+      // Allow same text at different positions
 
-      if (selectedTextIndex === -1) {
-        alert(
-          `Cannot find "${selectedTextTrimmed}" in the sentence. Please try selecting the text again.`
-        );
-        return;
-      }
+      // Find all occurrences of the selected text in the sentence
+      const occurrences: { start: number; end: number }[] = [];
+      let searchStart = 0;
 
-      const actualStart = selectedTextIndex;
-      const actualEnd = selectedTextIndex + selectedTextTrimmed.length;
+      // First, try to find exact matches
+      while (true) {
+        const index = currentSentence.indexOf(selectedTextTrimmed, searchStart);
+        if (index === -1) break;
 
-      const exactMatch = data.blanks.find(
-        (blank) => blank.text === selectedTextTrimmed
-      );
-      if (exactMatch) {
-        alert(`"${selectedTextTrimmed}" đã được thêm vào fill-in-blank rồi!`);
-        return;
-      }
+        // Check if this occurrence overlaps with existing placeholders
+        const beforeIndex = currentSentence.substring(0, index);
 
-      const overlappingBlank = data.blanks.find((blank) => {
-        const selectedContainsBlank = selectedTextTrimmed.includes(blank.text);
-        const blankContainsSelected = blank.text.includes(selectedTextTrimmed);
+        // Check if we're completely inside a placeholder
+        const beforePlaceholder = beforeIndex.lastIndexOf("{BLANK_");
+        const beforePlaceholderEnd = beforeIndex.lastIndexOf("}");
+        const isCompletelyInsidePlaceholder =
+          beforePlaceholder > beforePlaceholderEnd && beforePlaceholder !== -1;
 
-        if (selectedContainsBlank || blankContainsSelected) {
-          return true;
+        // If not completely inside a placeholder, this is a valid occurrence
+        if (!isCompletelyInsidePlaceholder) {
+          occurrences.push({
+            start: index,
+            end: index + selectedTextTrimmed.length,
+          });
         }
 
-        const blankStart = blank.start;
-        const blankEnd = blank.end;
+        searchStart = index + 1;
+      }
 
-        const hasPositionOverlap =
-          actualStart < blankEnd && actualEnd > blankStart;
+      // If no exact matches found, check if text spans across placeholders
+      if (occurrences.length === 0) {
+        // Create a version of the sentence with placeholders replaced by original text
+        let reconstructedSentence = currentSentence;
+        data.blanks.forEach((blank) => {
+          const placeholder = `{BLANK_${blank.id}}`;
+          reconstructedSentence = reconstructedSentence.replace(
+            placeholder,
+            blank.text
+          );
+        });
 
-        return hasPositionOverlap;
+        // Check if the text exists in the reconstructed sentence
+        const existsInReconstructed =
+          reconstructedSentence.includes(selectedTextTrimmed);
+
+        if (existsInReconstructed) {
+          alert(
+            `Text "${selectedTextTrimmed}" overlap với blank hiện tại. Vui lòng xóa blank liên quan trước hoặc chọn text khác.`
+          );
+        } else {
+          alert(
+            `Không thể tìm thấy "${selectedTextTrimmed}" trong câu. Vui lòng thử chọn lại text.`
+          );
+        }
+        return;
+      }
+
+      // Use the first available occurrence
+      const { start: actualStart, end: actualEnd } = occurrences[0];
+
+      // Check if this exact position already has a blank (overlap check)
+      const positionOverlap = data.blanks.some((blank) => {
+        // Check if the new blank would overlap with existing blank positions
+        return (
+          (actualStart >= blank.start && actualStart < blank.end) ||
+          (actualEnd > blank.start && actualEnd <= blank.end) ||
+          (actualStart <= blank.start && actualEnd >= blank.end)
+        );
       });
 
-      if (overlappingBlank) {
+      if (positionOverlap) {
         alert(
-          `"${selectedTextTrimmed}" có chồng lấn với blank "${overlappingBlank.text}" đã tồn tại!`
+          `Text "${selectedTextTrimmed}" overlap với blank hiện tại. Vui lòng chọn vị trí khác.`
         );
         return;
       }
@@ -134,8 +255,8 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
       const placeholder = `{BLANK_${newBlank.id}}`;
 
       // Use the actual positions for replacement
-      const beforeText = originalSentence.substring(0, actualStart);
-      const afterText = originalSentence.substring(actualEnd);
+      const beforeText = currentSentence.substring(0, actualStart);
+      const afterText = currentSentence.substring(actualEnd);
       const newSentence = beforeText + placeholder + afterText;
 
       const newBlanks = [...data.blanks, newBlank];
@@ -258,31 +379,85 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
   return (
     <>
       <div className="space-y-2 ">
-        <label className="text-sm font-medium text-gray-700">
-          Description/Question
-        </label>
-        <div className="border p-4 space-y-2 rounded-lg">
-          <label className="text-lg  font-medium text-gray-700">
-            Fill in blank
-          </label>
+        <label className="text-sm font-medium ">Description/Question</label>
+        <div className="relative" ref={containerRef}>
+          <Toolbar />
+          <div className="border p-4 space-y-2 rounded-b-lg">
+            <label className="text-lg font-medium ">Fill in blank</label>
 
-          <EditorWithToolbar
-            placeholder="Enter your fill in blank question here"
-            showDescriptionToggle={true}
-            onDescriptionToggle={handleFillInBlankDescriptionToggle}
-            showDescription={showFillInBlankDescription}
-            onContentChange={handleSentenceChange}
-            onTextSelected={handleTextSelected}
-            showAddToBlankButton={true}
-          />
+            <Editor
+              placeholder="Enter your fill in blank question here"
+              onContentChange={handleSentenceChange}
+              onTextSelection={handleTextSelection}
+            />
 
-          {data.sentence && (
-            <div className="mt-4 p-3 bg-gray-50 rounded-md">
-              <div className="text-sm leading-relaxed">
-                {renderSentenceWithBlanks()}
+            {/* Selection Tooltip */}
+            {selectedText && tooltipPosition && (
+              <div
+                className="selection-tooltip absolute z-50 animate-in fade-in-0 zoom-in-95 duration-200"
+                style={{
+                  top: `${tooltipPosition.top}px`,
+                  left: `${tooltipPosition.left}px`,
+                }}
+              >
+                <Button
+                  size="sm"
+                  color="primary"
+                  onClick={handleAddToBlank}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-sm font-medium"
+                  startContent={
+                    <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 text-xs font-bold">+</span>
+                    </div>
+                  }
+                >
+                  Add to fill in blank
+                </Button>
               </div>
-            </div>
-          )}
+            )}
+
+            {data.sentence && (
+              <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                <div className="leading-relaxed">
+                  {renderSentenceWithBlanks()}
+                </div>
+              </div>
+            )}
+            {showFillInBlankDescription ? (
+              <button
+                onClick={() =>
+                  handleFillInBlankDescriptionToggle(
+                    !showFillInBlankDescription
+                  )
+                }
+                className=" w-fit font-medium ml-auto  text-sm h-8  flex items-center justify-center gap-1"
+              >
+                <GrFormViewHide size={16} />
+                <span className="underline"> Hide description</span>
+              </button>
+            ) : (
+              <button
+                onClick={() =>
+                  handleFillInBlankDescriptionToggle(
+                    !showFillInBlankDescription
+                  )
+                }
+                className=" w-fit font-medium ml-auto  text-sm h-8  flex items-center justify-center gap-1"
+              >
+                <AiOutlinePlus size={16} />
+                <span className="underline"> Add description</span>
+              </button>
+            )}
+            {/* <button
+              onClick={() =>
+                handleFillInBlankDescriptionToggle(!showFillInBlankDescription)
+              }
+              className=" w-fit font-medium ml-auto  text-sm h-8  flex items-center justify-center gap-1"
+            >
+              <AiOutlinePlus size={16} />
+              <span className="underline"> Add description</span>
+            </button> */}
+          </div>
         </div>
       </div>
 
@@ -290,22 +465,24 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
         <div className="space-y-4">
           <label
             htmlFor="fill-in-blank-description"
-            className="text-sm font-medium text-gray-700"
+            className="text-sm font-medium "
           >
             Description for fill in blank
           </label>
-          <EditorWithToolbar
-            placeholder="Enter description for fill in blank"
-            showDescriptionToggle={false}
-            onContentChange={handleFillInBlankDescriptionChange}
-          />
+          <div className="border rounded-lg ">
+            <Toolbar />
+            <div className="p-3">
+              <Editor
+                placeholder="Enter description for fill in blank"
+                onContentChange={handleFillInBlankDescriptionChange}
+              />
+            </div>
+          </div>
         </div>
       )}
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">
-          Correct answer
-        </label>
+        <label className="text-sm font-medium ">Correct answer</label>
 
         {data.blanks.length > 0 && (
           <div
@@ -364,11 +541,15 @@ export const FillInBlankQuestion: React.FC<FillInBlankQuestionProps> = ({
         </div>
         {showCorrectAnswerDescription && (
           <div className="mt-4">
-            <EditorWithToolbar
-              placeholder="Enter description for correct answer here"
-              showDescriptionToggle={false}
-              onContentChange={handleCorrectAnswerDescriptionChange}
-            />
+            <div>
+              <Toolbar />
+              <div className="border rounded-b-lg p-4">
+                <Editor
+                  placeholder="Enter description for correct answer here"
+                  onContentChange={handleCorrectAnswerDescriptionChange}
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>

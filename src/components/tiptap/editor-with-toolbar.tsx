@@ -4,9 +4,6 @@ import Editor from "./editor";
 import { Button } from "@heroui/react";
 
 interface EditorWithToolbarProps {
-  showDescriptionToggle?: boolean;
-  onDescriptionToggle?: (show: boolean) => void;
-  showDescription?: boolean;
   placeholder?: string;
   onContentChange?: (content: string) => void;
   onTextSelected?: (selectedText: string, start: number, end: number) => void;
@@ -15,16 +12,12 @@ interface EditorWithToolbarProps {
 }
 
 const EditorWithToolbar: React.FC<EditorWithToolbarProps> = ({
-  showDescriptionToggle = false,
-  onDescriptionToggle,
-  showDescription = false,
   placeholder,
   onContentChange,
   onTextSelected,
   showAddToBlankButton = false,
   immediateTextSelection = false, // Default to false for backward compatibility
 }) => {
-  const [isFocused, setIsFocused] = useState(false);
   const [selectedText, setSelectedText] = useState<{
     text: string;
     start: number;
@@ -35,48 +28,6 @@ const EditorWithToolbar: React.FC<EditorWithToolbarProps> = ({
     left: number;
   } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const handleDescriptionToggle = () => {
-    if (onDescriptionToggle) {
-      onDescriptionToggle(!showDescription);
-    }
-  };
-
-  const handleFocus = () => {
-    setIsFocused(true);
-  };
-
-  const handleBlur = (e: React.FocusEvent) => {
-    // Check if the new focus target is within our container or a dropdown
-    const currentTarget = e.currentTarget;
-
-    // Use setTimeout to check after the focus event has settled
-    setTimeout(() => {
-      const activeElement = document.activeElement;
-
-      // Don't hide toolbar if:
-      // 1. Focus is still within our container
-      // 2. Focus is on a dropdown or modal element (common HeroUI patterns)
-      // 3. Focus is on an element with dropdown-related classes
-      if (
-        currentTarget.contains(activeElement) ||
-        activeElement?.closest('[role="menu"]') ||
-        activeElement?.closest('[role="listbox"]') ||
-        activeElement?.closest('[role="dialog"]') ||
-        activeElement?.closest(".dropdown") ||
-        activeElement?.closest('[data-slot="base"]') || // HeroUI dropdown base
-        activeElement?.classList.contains("dropdown-trigger") ||
-        activeElement?.classList.contains("dropdown-menu") ||
-        activeElement?.closest(".selection-tooltip") // Don't hide when clicking on tooltip
-      ) {
-        return;
-      }
-
-      setIsFocused(false);
-      setSelectedText(null);
-      setTooltipPosition(null);
-    }, 0);
-  };
 
   const getSelectionBoundingRect = () => {
     const selection = window.getSelection();
@@ -157,12 +108,7 @@ const EditorWithToolbar: React.FC<EditorWithToolbarProps> = ({
 
   return (
     <div className="relative" ref={containerRef}>
-      <div
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        className="focus-within:outline-none"
-        tabIndex={-1}
-      >
+      <div className="focus-within:outline-none" tabIndex={-1}>
         <Editor
           placeholder={placeholder}
           onContentChange={onContentChange}
@@ -195,23 +141,13 @@ const EditorWithToolbar: React.FC<EditorWithToolbarProps> = ({
         </div>
       )}
 
-      {isFocused && (
-        <div
-          className="mt-2 bg-white border border-gray-200 rounded-lg shadow-sm p-3"
-          onMouseDown={(e) => e.preventDefault()} // Prevent blur when clicking on toolbar
-        >
-          <Toolbar />
-
-          {showDescriptionToggle && (
-            <button
-              onClick={handleDescriptionToggle}
-              className="border rounded-full w-fit font-medium shadow-lg  text-sm h-8 px-3 bg-white flex items-center justify-center"
-            >
-              {showDescription ? "Hide Description" : "Show Description"}
-            </button>
-          )}
-        </div>
-      )}
+      {/* Always show toolbar */}
+      <div
+        className="mt-2 bg-white border border-gray-200 rounded-lg shadow-sm p-3"
+        onMouseDown={(e) => e.preventDefault()} // Prevent blur when clicking on toolbar
+      >
+        <Toolbar />
+      </div>
     </div>
   );
 };

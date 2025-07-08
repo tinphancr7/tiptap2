@@ -616,7 +616,7 @@ export default function QuestionEditor() {
             <div className="space-y-6">
               <div>
                 <h3 className="font-semibold text-lg mb-4">Fill in blank</h3>
-                <div className="flex flex-wrap items-end gap-x-2 gap-y-4 text-lg leading-9">
+                <div className="flex flex-wrap items-end gap-x-2 gap-y-4 ">
                   {renderSentenceWithBlanks().map((part, index) => {
                     if (
                       React.isValidElement(part) &&

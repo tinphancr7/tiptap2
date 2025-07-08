@@ -165,15 +165,22 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
         </label>
         <div className="border p-4 rounded-lg">
           <div className="mb-4 relative">
-            <h3 className="text-lg font-medium mb-2">
-              Rearrange this sentence
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-medium">Rearrange this sentence</h3>
+              <button
+                onClick={() =>
+                  handleQuestionDescriptionToggle(!showQuestionDescription)
+                }
+                className="border rounded-full w-fit font-medium shadow-lg text-sm h-8 px-3 bg-white flex items-center justify-center"
+              >
+                {showQuestionDescription
+                  ? "Hide Description"
+                  : "Show Description"}
+              </button>
+            </div>
             <div className="relative">
               <EditorWithToolbar
                 placeholder="Enter the sentence to be rearranged"
-                showDescriptionToggle={true}
-                onDescriptionToggle={handleQuestionDescriptionToggle}
-                showDescription={showQuestionDescription}
                 onContentChange={handleSentenceChange}
                 onTextSelected={handleTextSelection}
                 immediateTextSelection={true}
@@ -204,7 +211,6 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
           </label>
           <EditorWithToolbar
             placeholder="Enter description for the rearrangement question"
-            showDescriptionToggle={false}
             onContentChange={handleQuestionDescriptionChange}
           />
         </div>
@@ -337,7 +343,6 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
             <div className="mt-4">
               <EditorWithToolbar
                 placeholder="Enter description for mixed answer here"
-                showDescriptionToggle={false}
                 onContentChange={handleMixedAnswerDescriptionChange}
               />
             </div>
@@ -427,7 +432,6 @@ export const ArrangementQuestion: React.FC<ArrangementQuestionProps> = ({
             <div className="mt-4">
               <EditorWithToolbar
                 placeholder="Enter description for correct answer here"
-                showDescriptionToggle={false}
                 onContentChange={handleCorrectAnswerDescriptionChange}
               />
             </div>
