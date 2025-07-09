@@ -12,12 +12,16 @@ interface LeftPanelProps {
     onItemChange: (id: string, key: string, value: unknown) => void,
     isLastChild?: boolean
   ) => React.ReactNode;
+  selectedSubject: string;
+  onSubjectChange: (subject: string) => void;
 }
 
 const LeftPanel: React.FC<LeftPanelProps> = ({
   treeData,
   onItemChange,
   renderTreeItem,
+  selectedSubject,
+  onSubjectChange,
 }) => {
   return (
     <div className="w-1/2 bg-white border-r border-gray-200 flex flex-col h-full">
@@ -27,12 +31,10 @@ const LeftPanel: React.FC<LeftPanelProps> = ({
         </h2>
 
         <div className="mb-2 border rounded-md flex-shrink-0">
-          {/* <CategoryTabs
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onCategorySelect={onCategorySelect}
-          /> */}
-          <SubjectSelector />
+          <SubjectSelector
+            selectedSubject={selectedSubject}
+            onSubjectChange={onSubjectChange}
+          />
         </div>
 
         {/* Tree Structure - scrollable content area */}

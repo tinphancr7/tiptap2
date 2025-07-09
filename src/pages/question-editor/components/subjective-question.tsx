@@ -1,11 +1,12 @@
 import Editor from "@/components/tiptap/editor";
 import Toolbar from "@/components/tiptap/toolbar";
-import CustomSwitch from "@/components/ui/custom-switch";
+
 import React, { useState } from "react";
 import { AiOutlinePlus } from "react-icons/ai";
 import { GrFormViewHide } from "react-icons/gr";
-import type { BaseQuestionData } from "./question-preview";
+import type { SubjectiveQuestionData } from "./question-preview";
 import type { QuestionType } from "./types";
+import CustomSwitch from "@/components/form/custom-switch/custom-switch";
 export type ActiveEditor =
   | "question"
   | "questionDescription"
@@ -16,15 +17,9 @@ export interface EditorState {
   activeEditor: ActiveEditor;
   questionType: QuestionType;
 }
-export interface QuestionComponentProps {
-  editorState: EditorState;
-  onEditorStateChange: (state: Partial<EditorState>) => void;
-  onFocus: (editor: ActiveEditor) => void;
-  onBlur: () => void;
-}
-interface SubjectiveQuestionProps extends QuestionComponentProps {
-  data: BaseQuestionData;
-  onDataChange: (data: Partial<BaseQuestionData>) => void;
+interface SubjectiveQuestionProps {
+  data: SubjectiveQuestionData;
+  onDataChange: (data: Partial<SubjectiveQuestionData>) => void;
 }
 export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
   data,
@@ -33,8 +28,6 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
   const [showQuestionDescription, setShowQuestionDescription] = useState(
     data.showQuestionDescription
   );
-  const [showCorrectAnswerDescription, setShowCorrectAnswerDescription] =
-    useState(data.showCorrectAnswerDescription);
   const [isLandscape, setIsLandscape] = useState(false);
   const [isLeftToRight, setIsLeftToRight] = useState(false);
   const [characterLimitEnabled, setCharacterLimitEnabled] = useState(false);
@@ -48,16 +41,14 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
   const handleCorrectAnswerChange = (content: string) => {
     onDataChange({ correctAnswer: content });
   };
-  const handleCorrectAnswerDescriptionChange = (content: string) => {
-    onDataChange({ correctAnswerDescription: content });
-  };
   const handleQuestionDescriptionToggle = (show: boolean) => {
     setShowQuestionDescription(show);
     onDataChange({ showQuestionDescription: show });
   };
-  const handleCorrectAnswerDescriptionToggle = (show: boolean) => {
-    setShowCorrectAnswerDescription(show);
-    onDataChange({ showCorrectAnswerDescription: show });
+
+  const handleLeftToRightToggle = (leftToRight: boolean) => {
+    setIsLeftToRight(leftToRight);
+    onDataChange({ isLeftToRight: leftToRight });
   };
   const handleCharacterLimitToggle = (enabled: boolean) => {
     setCharacterLimitEnabled(enabled);
@@ -70,7 +61,6 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
   };
   return (
     <div className="space-y-4">
-      {}
       <div className="flex items-center space-x-8">
         <div className="flex items-center space-x-4">
           <label className="text-sm font-medium text-gray-700">
@@ -91,7 +81,7 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
           </label>
           <CustomSwitch
             isSelected={isLeftToRight}
-            onSelectionChange={setIsLeftToRight}
+            onSelectionChange={handleLeftToRightToggle}
             label="Left to right"
             className="w-[120px]"
             selectedColor="#0958D9"
@@ -163,7 +153,7 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
         >
           Correct answer
         </label>
-        <div className="border rounded-lg ">
+        <div className="border rounded-lg">
           <Toolbar />
           <div className="p-3">
             <Editor
@@ -172,53 +162,8 @@ export const SubjectiveQuestion: React.FC<SubjectiveQuestionProps> = ({
             />
           </div>
         </div>
-        {showCorrectAnswerDescription ? (
-          <button
-            onClick={() =>
-              handleCorrectAnswerDescriptionToggle(
-                !showCorrectAnswerDescription
-              )
-            }
-            className=" w-fit font-medium ml-auto  text-sm h-8  flex items-center justify-center gap-1"
-          >
-            <GrFormViewHide size={16} />
-            <span className="underline"> Hide description</span>
-          </button>
-        ) : (
-          <button
-            onClick={() =>
-              handleCorrectAnswerDescriptionToggle(
-                !showCorrectAnswerDescription
-              )
-            }
-            className=" w-fit font-medium ml-auto  text-sm h-8  flex items-center justify-center gap-1"
-          >
-            <AiOutlinePlus size={16} />
-            <span className="underline"> Add description</span>
-          </button>
-        )}
-        {showCorrectAnswerDescription && (
-          <div className="space-y-2">
-            <label
-              htmlFor="correct-answer-description"
-              className="text-sm font-medium text-gray-700"
-            >
-              Description for correct answer
-            </label>
-            <div className="border rounded-lg ">
-              <Toolbar />
-              <div className="p-3">
-                <Editor
-                  placeholder="Enter description for correct answer"
-                  onContentChange={handleCorrectAnswerDescriptionChange}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-        {}
+
         <div className="flex items-center gap-1 p-1 border rounded-full w-fit">
-          {}
           <CustomSwitch
             isSelected={characterLimitEnabled}
             onSelectionChange={handleCharacterLimitToggle}

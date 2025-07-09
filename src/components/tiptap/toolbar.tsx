@@ -18,10 +18,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@heroui/react";
-import { useState, type FC, type ReactElement } from "react";
-import React from "react";
+import React, { useState, type FC, type ReactElement } from "react";
 import { CirclePicker, SketchPicker, type ColorResult } from "react-color";
 import { type IconType } from "react-icons";
+import { IoMdColorFilter } from "react-icons/io";
 import {
   MdFormatAlignCenter,
   MdFormatAlignJustify,
@@ -34,7 +34,6 @@ import {
   MdFormatListBulleted,
   MdFormatListNumbered,
   MdFormatUnderlined,
-  MdHighlight,
   MdImage,
   MdKeyboardArrowDown,
   MdSearch,
@@ -583,7 +582,7 @@ const HighlightColorButton = () => {
           onMouseDown={(e) => e.preventDefault()}
           className="h-8 min-w-8 shrink-0 flex items-center justify-center rounded-md hover:bg-gray-50 px-2 overflow-hidden text-sm transition-colors"
         >
-          <MdHighlight className={"size-5"} />
+          <IoMdColorFilter className={"size-5"} />
         </button>
       </DropdownTrigger>
       <DropdownMenu>
@@ -783,12 +782,12 @@ const Toolbar = () => {
       <FontFamilyButton />
       <LinkButton />
       <AlignButton />
+      <ListButton />
       <FontSizeButton />
       <TextColorButton />
       <HighlightColorButton />
       <ImageButton />
       <AudioButton />
-      <ListButton />
     </div>
   );
 };

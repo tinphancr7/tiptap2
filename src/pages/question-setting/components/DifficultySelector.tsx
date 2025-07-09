@@ -1,5 +1,5 @@
 interface DifficultySelectorProps {
-  selectedDifficulty: number[];
+  selectedDifficulty: number | null;
   onDifficultyChange: (difficulty: number) => void;
 }
 
@@ -16,9 +16,9 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({
             key={num}
             onClick={() => onDifficultyChange(num)}
             className={`w-full h-11 rounded-md text-sm font-medium transition-colors ${
-              selectedDifficulty.includes(num)
-                ? 'bg-gray-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              selectedDifficulty === num
+                ? "bg-gray-600 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             {num}

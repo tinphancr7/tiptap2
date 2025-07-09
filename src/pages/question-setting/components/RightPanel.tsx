@@ -1,10 +1,10 @@
-import DifficultySelector from './DifficultySelector';
-import TargetGroupSelector from './TargetGroupSelector';
-import PriceInput from './PriceInput';
-import NextStepButton from './NextStepButton';
+import DifficultySelector from "./DifficultySelector";
+import TargetGroupSelector from "./TargetGroupSelector";
+import PriceInput from "./PriceInput";
+import NextStepButton from "./NextStepButton";
 
 interface RightPanelProps {
-  selectedDifficulty: number[];
+  selectedDifficulty: number | null;
   onDifficultyChange: (difficulty: number) => void;
   targetGroups: string[];
   selectedTargetGroups: string[];

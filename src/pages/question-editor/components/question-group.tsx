@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { MdDragIndicator, MdDelete, MdExpandMore } from "react-icons/md";
-import { FaCirclePlus } from "react-icons/fa6";
+import { MdDragIndicator } from "react-icons/md";
+import { FaCirclePlus, FaTrashCan } from "react-icons/fa6";
 import { AiOutlinePlus } from "react-icons/ai";
 import { GrFormViewHide } from "react-icons/gr";
 import {
@@ -27,7 +27,7 @@ import type {
   QuestionGroupData,
   QuestionGroupItem,
   QuestionType,
-  BaseQuestionData,
+  SubjectiveQuestionData,
   FillInBlankData,
   ArrangementData,
   MultipleChoiceData,
@@ -37,6 +37,7 @@ import { SubjectiveQuestion } from "./subjective-question";
 import { FillInBlankQuestion } from "./fill-in-blank-question";
 import { ArrangementQuestion } from "./arrangement-question";
 import { MultipleChoiceQuestion } from "./multiple-choice-question";
+import { BsArrowsCollapse, BsArrowsExpand } from "react-icons/bs";
 interface QuestionGroupProps {
   data: QuestionGroupData;
   onDataChange: (data: Partial<QuestionGroupData>) => void;
@@ -176,21 +177,17 @@ const SortableQuestion: React.FC<SortableQuestionProps> = ({
           <button
             onClick={() => onDeleteQuestion(question.id)}
             disabled={questionsLength <= 1}
-            className="p-2 text-red-500 hover:bg-red-50 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+            className="p-2 hover:text-red-500 bg-gray-100 hover:bg-red-50 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
           >
-            <MdDelete className="w-4 h-4" />
+            <FaTrashCan size={18} />
           </button>
           <button
             onClick={() => onToggleCollapse(question.id)}
-            className="p-2 text-gray-500 hover:bg-gray-50 rounded-md transition-all duration-200 hover:scale-105"
+            className="p-2  bg-gray-100 rounded-md transition-all duration-200 hover:scale-105"
             title={isCollapsed ? "Expand question" : "Collapse question"}
           >
-            <div
-              className={`transition-transform duration-200 ${
-                isCollapsed ? "rotate-0" : "rotate-180"
-              }`}
-            >
-              <MdExpandMore className="w-4 h-4" />
+            <div className="transition-transform duration-200 font-bold ">
+              {isCollapsed ? <BsArrowsCollapse /> : <BsArrowsExpand />}
             </div>
           </button>
         </div>
@@ -270,7 +267,7 @@ export const QuestionGroup: React.FC<QuestionGroupProps> = ({
   const createDefaultQuestionData = (
     type: Exclude<QuestionType, typeof QuestionMode.COMPOSITE>
   ) => {
-    const baseData: BaseQuestionData = {
+    const subjectiveData: SubjectiveQuestionData = {
       questionTitle: "",
       questionDescription: "",
       showQuestionDescription: false,
@@ -281,7 +278,7 @@ export const QuestionGroup: React.FC<QuestionGroupProps> = ({
     switch (type) {
       case QuestionMode.FILL_IN_BLANK:
         return {
-          baseData,
+          subjectiveData,
           fillInBlankData: {
             sentence: "",
             fillInBlankDescription: "",
@@ -296,7 +293,7 @@ export const QuestionGroup: React.FC<QuestionGroupProps> = ({
         };
       case QuestionMode.ARRANGING:
         return {
-          baseData,
+          subjectiveData,
           arrangementData: {
             sentence: "",
             mixedWords: [],
@@ -315,7 +312,7 @@ export const QuestionGroup: React.FC<QuestionGroupProps> = ({
         };
       case QuestionMode.MULTIPLE_CHOICE:
         return {
-          baseData,
+          subjectiveData,
           multipleChoiceData: {
             questionTitle: "",
             questionDescription: "",
@@ -338,7 +335,7 @@ export const QuestionGroup: React.FC<QuestionGroupProps> = ({
           } as MultipleChoiceData,
         };
       default:
-        return { baseData };
+        return { subjectiveData };
     }
   };
   const handleAddQuestion = () => {
@@ -379,12 +376,15 @@ export const QuestionGroup: React.FC<QuestionGroupProps> = ({
   const handleQuestionDataChange = (
     questionId: string,
     dataType:
-      | "baseData"
+      | "subjectiveData"
       | "fillInBlankData"
       | "arrangementData"
       | "multipleChoiceData",
     questionData: Partial<
-      BaseQuestionData | FillInBlankData | ArrangementData | MultipleChoiceData
+      | SubjectiveQuestionData
+      | FillInBlankData
+      | ArrangementData
+      | MultipleChoiceData
     >
   ) => {
     const updatedQuestions = data.questions.map((q) => {
@@ -399,10 +399,6 @@ export const QuestionGroup: React.FC<QuestionGroupProps> = ({
     onDataChange({ questions: updatedQuestions });
   };
   const renderQuestionEditor = (question: QuestionGroupItem) => {
-    const editorState = {
-      questionType: question.type,
-      activeEditor: null,
-    };
     switch (question.type) {
       case QuestionMode.FILL_IN_BLANK:
         return (
@@ -434,13 +430,9 @@ export const QuestionGroup: React.FC<QuestionGroupProps> = ({
       default:
         return (
           <SubjectiveQuestion
-            editorState={editorState}
-            onEditorStateChange={() => {}}
-            onFocus={() => {}}
-            onBlur={() => {}}
-            data={question.baseData!}
+            data={question.subjectiveData!}
             onDataChange={(data) =>
-              handleQuestionDataChange(question.id, "baseData", data)
+              handleQuestionDataChange(question.id, "subjectiveData", data)
             }
           />
         );
@@ -520,25 +512,15 @@ export const QuestionGroup: React.FC<QuestionGroupProps> = ({
       onDragEnd={handleDragEnd}
     >
       <div className="space-y-6">
-        {}
         <SortableContext
           items={groupSectionOrder}
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-6">{renderGroupSections()}</div>
         </SortableContext>
-        {}
+
         <div className="space-y-4">
-          <div className="flex items-start gap-2">
-            <div className="mt-2 text-gray-400 p-1">
-              <MdDragIndicator className="opacity-0" />
-            </div>
-            <div className="flex-1">
-              <label className="text-sm font-medium text-gray-700">
-                Questions
-              </label>
-            </div>
-          </div>
+          <label className="text-sm font-medium text-gray-700">Questions</label>
           <SortableContext
             items={data.questions.map((q) => q.id)}
             strategy={verticalListSortingStrategy}
@@ -558,7 +540,7 @@ export const QuestionGroup: React.FC<QuestionGroupProps> = ({
               ))}
             </div>
           </SortableContext>
-          {}
+
           <div className="mt-6 flex items-start gap-2">
             <div className="mt-2 text-gray-400 p-1">
               <MdDragIndicator className="opacity-0" />

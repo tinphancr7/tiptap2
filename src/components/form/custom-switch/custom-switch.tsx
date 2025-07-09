@@ -15,8 +15,8 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
   onSelectionChange,
   label,
   className,
-  selectedColor = "#fb923c", // orange-400 default
-  unselectedColor = "#d1d5db", // gray-300 default
+  selectedColor = "#fb923c",
+  unselectedColor = "#d1d5db",
 }) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [thumbPosition, setThumbPosition] = useState({ left: 4, right: 4 });
@@ -24,8 +24,8 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
   useEffect(() => {
     if (buttonRef.current) {
       const buttonWidth = buttonRef.current.offsetWidth;
-      const thumbWidth = 20; // 5 * 4 = 20px (w-5)
-      const padding = 4; // 1 * 4 = 4px (top-1)
+      const thumbWidth = 20;
+      const padding = 4;
 
       const leftPosition = padding;
       const rightPosition = buttonWidth - thumbWidth - padding;

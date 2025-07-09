@@ -1,7 +1,15 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { MdArrowLeft, MdArrowRight } from "react-icons/md";
 
-const SubjectSelector = () => {
+interface SubjectSelectorProps {
+  selectedSubject: string;
+  onSubjectChange: (subject: string) => void;
+}
+
+const SubjectSelector: React.FC<SubjectSelectorProps> = ({
+  selectedSubject,
+  onSubjectChange,
+}) => {
   const categories = [
     { key: "english", label: "English" },
     { key: "math", label: "Math" },
@@ -17,11 +25,10 @@ const SubjectSelector = () => {
     { key: "economics", label: "Economics" },
   ];
 
-  const [activeCategory, setActiveCategory] = useState("english");
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const handleCategoryClick = (categoryKey: string) => {
-    setActiveCategory(categoryKey);
+    onSubjectChange(categoryKey);
   };
 
   const scrollLeft = () => {
@@ -50,7 +57,7 @@ const SubjectSelector = () => {
             className={`
             p-2.5 h-[44px] mx-1 rounded-lg transition-all duration-300 ease-in-out
             ${
-              activeCategory === category.key
+              selectedSubject === category.key
                 ? "bg-amber-500 text-white shadow-md"
                 : "bg-[#F3F3F3] text-gray-700 hover:bg-gray-300"
             }

@@ -18,38 +18,41 @@ import type {
 import { QuestionMode } from "./components/types";
 import {
   SubjectiveQuestion,
-  type ActiveEditor,
   type EditorState,
 } from "./components/subjective-question";
 import {
   QuestionPreview,
-  type BaseQuestionData,
+  type SubjectiveQuestionData,
 } from "./components/question-preview";
-import { RegistrationHeader } from "../question-setting/components";
+import QuestionRegistrationLayout from "@/layouts/QuestionRegistrationLayout";
 export default function QuestionEditor() {
   const location = useLocation();
   const registrationData = location.state || {
     selectedCategory: "",
-    selectedDifficulty: [],
+    selectedSubject: "",
+    selectedDifficulty: null,
     selectedTargetGroups: [],
     price: "",
   };
+
   const [editorState, setEditorState] = useState<EditorState>({
     activeEditor: null,
-    questionType: QuestionMode.COMPOSITE,
+    questionType: QuestionMode.SUBJECTIVE,
   });
   const [selectedCategory, setSelectedCategory] = useState<string>(
     registrationData.selectedCategory || ""
   );
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [baseQuestionData, setBaseQuestionData] = useState<BaseQuestionData>({
-    questionTitle: "",
-    questionDescription: "",
-    showQuestionDescription: false,
-    correctAnswer: "",
-    correctAnswerDescription: "",
-    showCorrectAnswerDescription: false,
-  });
+  const [subjectiveQuestionData, setSubjectiveQuestionData] =
+    useState<SubjectiveQuestionData>({
+      questionTitle: "",
+      questionDescription: "",
+      showQuestionDescription: false,
+      correctAnswer: "",
+      correctAnswerDescription: "",
+      showCorrectAnswerDescription: false,
+      isLeftToRight: false,
+    });
   const [fillInBlankData, setFillInBlankData] = useState<FillInBlankData>({
     sentence: "",
     blanks: [],
@@ -103,9 +106,9 @@ export default function QuestionEditor() {
       questions: [
         {
           id: "1",
-          title: "Question 1",
+          title: "",
           type: QuestionMode.SUBJECTIVE,
-          baseData: {
+          subjectiveData: {
             questionTitle: "",
             questionDescription: "",
             showQuestionDescription: false,
@@ -117,19 +120,18 @@ export default function QuestionEditor() {
       ],
     }
   );
-  const formatCategoryPath = (path: string) => {
+  const formatCategoryPath = (path: string, selectedSubject: string) => {
     if (!path) return "Select a category...";
     const parts = path.split(" > ");
     if (parts.length <= 2) {
       return path.replace(/ > /g, " / ");
     }
-    return `${parts[0]} / ... / ${parts[parts.length - 1]}`;
+    return `${selectedSubject} / ... / ${parts[parts.length - 1]}`;
   };
-  const handleEditorStateChange = (state: Partial<EditorState>) => {
-    setEditorState((prev) => ({ ...prev, ...state }));
-  };
-  const handleBaseQuestionDataChange = (data: Partial<BaseQuestionData>) => {
-    setBaseQuestionData((prev) => ({ ...prev, ...data }));
+  const handleSubjectiveQuestionDataChange = (
+    data: Partial<SubjectiveQuestionData>
+  ) => {
+    setSubjectiveQuestionData((prev) => ({ ...prev, ...data }));
   };
   const handleFillInBlankDataChange = (data: Partial<FillInBlankData>) => {
     setFillInBlankData((prev) => ({ ...prev, ...data }));
@@ -145,29 +147,16 @@ export default function QuestionEditor() {
   const handleQuestionGroupDataChange = (data: Partial<QuestionGroupData>) => {
     setQuestionGroupData((prev: QuestionGroupData) => ({ ...prev, ...data }));
   };
-  const handleFocus = (editor: ActiveEditor) => {
-    setEditorState((prev) => ({ ...prev, activeEditor: editor }));
-  };
-  const handleBlur = () => {
-    setTimeout(() => {
-      if (
-        document.activeElement?.closest(".editor-toolbar-container") === null
-      ) {
-        setEditorState((prev) => ({ ...prev, activeEditor: null }));
-      }
-    }, 100);
-  };
   const handleQuestionTypeChange = (questionType: QuestionType) => {
     setEditorState((prev) => ({ ...prev, questionType }));
   };
-  const steps = ["Setting general information", "Editor"];
-  const [currentStep] = useState(0);
+
   return (
-    <div className="min-h-screen bg-[#F0F0F0] flex flex-col">
-      <div className="px-4 flex-shrink-0">
-        <RegistrationHeader currentStep={currentStep} steps={steps} />
-      </div>
-      <div className="flex-1 px-4 pb-4 flex flex-col min-h-0">
+    <QuestionRegistrationLayout
+      backgroundColor="bg-[#F0F0F0]"
+      heightClass="min-h-screen"
+    >
+      <div className="flex-1 pb-4 flex flex-col min-h-0">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 max-w-full flex-1">
           <div className="lg:col-span-7 p-5 space-y-5 bg-white  border-r border-gray-200">
             <div className="flex gap-4">
@@ -180,8 +169,11 @@ export default function QuestionEditor() {
                   className="w-full p-3 bg-white border border-gray-200 rounded-lg text-left hover:border-gray-300 transition-colors h-10 overflow-hidden"
                 >
                   <div className="flex items-center justify-between h-full">
-                    <span className="text-sm text-gray-700 line-clamp-1 flex-1 mr-2">
-                      {formatCategoryPath(selectedCategory)}
+                    <span className="text-sm text-gray-700 line-clamp-1 flex-1 mr-2 capitalize">
+                      {formatCategoryPath(
+                        selectedCategory,
+                        registrationData?.selectedSubject
+                      )}
                     </span>
                     <svg
                       className="w-4 h-4 text-gray-400 flex-shrink-0"
@@ -261,19 +253,15 @@ export default function QuestionEditor() {
               />
             ) : (
               <SubjectiveQuestion
-                editorState={editorState}
-                onEditorStateChange={handleEditorStateChange}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                data={baseQuestionData}
-                onDataChange={handleBaseQuestionDataChange}
+                data={subjectiveQuestionData}
+                onDataChange={handleSubjectiveQuestionDataChange}
               />
             )}
           </div>
           <div className="col-span-5 bg-white">
             <QuestionPreview
               questionType={editorState.questionType}
-              baseData={baseQuestionData}
+              baseData={subjectiveQuestionData}
               fillInBlankData={
                 editorState.questionType === QuestionMode.FILL_IN_BLANK
                   ? fillInBlankData
@@ -304,6 +292,6 @@ export default function QuestionEditor() {
           initialSelectedPath={selectedCategory}
         />
       </div>
-    </div>
+    </QuestionRegistrationLayout>
   );
 }

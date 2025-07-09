@@ -2,29 +2,26 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCategoryTree } from "@/hooks/useCategoryTree";
 import type { TreeMenuItem } from "@/hooks/useCategoryTree";
-import CategoryModal from "@/components/category-modal";
 import { MdArrowRight } from "react-icons/md";
 import { FaCheck } from "react-icons/fa";
-import { RegistrationHeader, LeftPanel, RightPanel } from "./components";
+import { LeftPanel, RightPanel } from "./components";
+import QuestionRegistrationLayout from "@/layouts/QuestionRegistrationLayout";
 
 const QuestionSettings = () => {
   const navigate = useNavigate();
-  const [currentStep] = useState(0);
 
-  // Local state for all form data
-  const [selectedDifficulty, setSelectedDifficulty] = useState<number[]>([]);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<number | null>(
+    null
+  );
+  const [selectedSubject, setSelectedSubject] = useState<string>("english");
   const [selectedTargetGroups, setSelectedTargetGroups] = useState<string[]>([
     "초1 ~ 초6",
     "유치원",
   ]);
   const [price, setPrice] = useState("");
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
-  // Use the category tree hook for local display only
   const { treeData, handleItemChange, getSelectedCategoryPath } =
     useCategoryTree();
-
-  const steps = ["Setting general information", "Editor"];
 
   const targetGroups = [
     "초1 ~ 초6",
@@ -39,26 +36,19 @@ const QuestionSettings = () => {
   ];
 
   const handleNextStep = async () => {
-    // Get the selected category from tree
     const selectedPath = getSelectedCategoryPath();
 
-    // Prepare data to pass to next step
     const registrationData = {
       selectedCategory: selectedPath,
       selectedDifficulty: selectedDifficulty,
+      selectedSubject: selectedSubject,
       selectedTargetGroups: selectedTargetGroups,
       price: price,
     };
 
-    // Navigate to editor page with state
     navigate("/question-registration/editor", {
       state: registrationData,
     });
-  };
-
-  const handleCategoryConfirm = (_selectedPath: string) => {
-    // Category will be handled by the tree component directly
-    // This is just for the modal confirmation
   };
 
   const renderTreeItem = (
@@ -170,11 +160,13 @@ const QuestionSettings = () => {
   };
 
   const handleDifficultyClick = (difficulty: number) => {
-    setSelectedDifficulty((prev) =>
-      prev.includes(difficulty)
-        ? prev.filter((d) => d !== difficulty)
-        : [...prev, difficulty]
+    setSelectedDifficulty(
+      selectedDifficulty === difficulty ? null : difficulty
     );
+  };
+
+  const handleSubjectChange = (subject: string) => {
+    setSelectedSubject(subject);
   };
 
   const handleTargetGroupClick = (group: string) => {
@@ -184,39 +176,26 @@ const QuestionSettings = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col px-4 bg-gray-50">
-      <div className="flex-shrink-0">
-        <RegistrationHeader currentStep={currentStep} steps={steps} />
-      </div>
-
-      {/* Main Content - takes remaining space with proper overflow handling */}
-      <div className="flex flex-1 bg-gray-50 min-h-0 overflow-hidden">
-        <LeftPanel
-          treeData={treeData}
-          onItemChange={handleItemChange}
-          renderTreeItem={renderTreeItem}
-        />
-
-        <RightPanel
-          selectedDifficulty={selectedDifficulty}
-          onDifficultyChange={handleDifficultyClick}
-          targetGroups={targetGroups}
-          selectedTargetGroups={selectedTargetGroups}
-          onTargetGroupChange={handleTargetGroupClick}
-          price={price}
-          onPriceChange={setPrice}
-          onNextStep={handleNextStep}
-        />
-      </div>
-
-      {/* Category Modal */}
-      <CategoryModal
-        isOpen={isCategoryModalOpen}
-        onClose={() => setIsCategoryModalOpen(false)}
-        onConfirm={handleCategoryConfirm}
-        initialSelectedPath=""
+    <QuestionRegistrationLayout>
+      <LeftPanel
+        treeData={treeData}
+        onItemChange={handleItemChange}
+        renderTreeItem={renderTreeItem}
+        selectedSubject={selectedSubject}
+        onSubjectChange={handleSubjectChange}
       />
-    </div>
+
+      <RightPanel
+        selectedDifficulty={selectedDifficulty}
+        onDifficultyChange={handleDifficultyClick}
+        targetGroups={targetGroups}
+        selectedTargetGroups={selectedTargetGroups}
+        onTargetGroupChange={handleTargetGroupClick}
+        price={price}
+        onPriceChange={setPrice}
+        onNextStep={handleNextStep}
+      />
+    </QuestionRegistrationLayout>
   );
 };
 

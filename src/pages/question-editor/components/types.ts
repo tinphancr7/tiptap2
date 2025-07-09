@@ -37,7 +37,7 @@ export type Selection = {
   text: string;
 } | null;
 export type AnswerLayout = "horizontal" | "vertical";
-export interface BaseQuestionData {
+export interface SubjectiveQuestionData {
   questionTitle: string;
   questionDescription: string;
   showQuestionDescription: boolean;
@@ -101,7 +101,7 @@ export interface QuestionGroupItem {
   id: string;
   title: string;
   type: Exclude<QuestionType, typeof QuestionMode.COMPOSITE>;
-  baseData?: BaseQuestionData;
+  subjectiveData?: SubjectiveQuestionData;
   fillInBlankData?: FillInBlankData;
   arrangementData?: ArrangementData;
   multipleChoiceData?: MultipleChoiceData;

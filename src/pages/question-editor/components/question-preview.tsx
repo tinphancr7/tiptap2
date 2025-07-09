@@ -8,17 +8,18 @@ import type {
   QuestionType,
 } from "./types";
 import { QuestionMode } from "./types";
-export interface BaseQuestionData {
+export interface SubjectiveQuestionData {
   questionTitle: string;
   questionDescription: string;
   showQuestionDescription: boolean;
   correctAnswer: string;
   correctAnswerDescription: string;
   showCorrectAnswerDescription: boolean;
+  isLeftToRight?: boolean;
 }
 interface QuestionPreviewProps {
   questionType: QuestionType;
-  baseData: BaseQuestionData;
+  baseData: SubjectiveQuestionData;
   fillInBlankData?: FillInBlankData;
   arrangementData?: ArrangementData;
   multipleChoiceData?: MultipleChoiceData;
@@ -185,11 +186,10 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
       });
       return (
         <div className="space-y-4">
-          {}
           <div className="text-lg flex flex-wrap items-baseline">
             {sentenceElements}
           </div>
-          {}
+
           {mixedWords.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {mixedWords.map((word, index) => (
@@ -222,7 +222,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
               />
             </div>
           )}
-        {}
+
         {arrangementData.mixedWords.length > 0 && (
           <div className="space-y-4">
             <div>
@@ -259,7 +259,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
                 </div>
               </div>
             </div>
-            {}
+
             {arrangementData.showMixedAnswerDescription &&
               arrangementData.mixedAnswerDescription && (
                 <div>
@@ -276,7 +276,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
               )}
           </div>
         )}
-        {}
+
         {arrangementData.mixedWords.length > 0 &&
           arrangementData.correctOrder.length > 0 && (
             <div className="space-y-4">
@@ -318,7 +318,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
                   </div>
                 </div>
               </div>
-              {}
+
               {arrangementData.showCorrectAnswerDescription &&
                 arrangementData.correctAnswerDescription && (
                   <div>
@@ -369,7 +369,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
               )}
           </div>
         )}
-        {}
+
         {multipleChoiceData.options.some((option) =>
           option.inputs.some((input) => input.text.trim() !== "")
         ) && (
@@ -485,7 +485,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
       return (
         <div className="space-y-6 ">
           <div>
-            <h3 className="font-semibold text-lg mb-2">Fill in blank</h3>
             <div>{renderSentenceWithBlanks()}</div>
           </div>
           {data.showFillInBlankDescription && data.fillInBlankDescription && (
@@ -600,9 +599,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
       };
       return (
         <div className="space-y-5">
-          <h3 className="font-semibold text-lg mb-4">
-            Rearrange this sentence
-          </h3>
           {renderPreviewSentence()}
           {data.showQuestionDescription && data.questionDescription && (
             <div>
@@ -623,33 +619,20 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
     const renderMultipleChoiceSubQuestion = (data: MultipleChoiceData) => {
       return (
         <div className="space-y-6">
-          {data.questionTitle && (
+          {data.showQuestionDescription && data.questionDescription && (
             <div>
-              <h3 className="font-semibold text-lg mb-2">
-                Choose correct question
-              </h3>
+              <h5 className="font-medium text-sm mb-2">
+                Description for question:
+              </h5>
               <div
-                className="prose prose-sm max-w-none"
+                className="text-gray-600 text-sm break-words prose prose-sm max-w-none"
                 dangerouslySetInnerHTML={{
-                  __html: data.questionTitle,
+                  __html: data.questionDescription,
                 }}
               />
-              {data.showQuestionDescription && data.questionDescription && (
-                <div className="mt-3">
-                  <h5 className="font-medium text-sm mb-2">
-                    Description for question:
-                  </h5>
-                  <div
-                    className="text-gray-600 text-sm break-words prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{
-                      __html: data.questionDescription,
-                    }}
-                  />
-                </div>
-              )}
             </div>
           )}
-          {}
+
           {data.options.some((option) =>
             option.inputs.some((input) => input.text.trim() !== "")
           ) && (
@@ -709,36 +692,29 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
         </div>
       );
     };
-    const renderStandardSubQuestion = (data: BaseQuestionData) => {
+    const renderStandardSubQuestion = (data: SubjectiveQuestionData) => {
       return (
         <div className="space-y-4">
-          {}
-          {data.questionTitle && (
+          {data.showQuestionDescription && data.questionDescription && (
             <div>
-              <h3 dangerouslySetInnerHTML={{ __html: data.questionTitle }} />
-              {}
-              {data.showQuestionDescription && data.questionDescription && (
-                <div className="mt-3">
-                  <label className="block text-sm font-medium text-gray-700 ">
-                    Description for question:
-                  </label>
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: data.questionDescription,
-                    }}
-                  />
-                </div>
-              )}
+              <label className="block text-sm font-medium text-gray-700 ">
+                Description for question:
+              </label>
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: data.questionDescription,
+                }}
+              />
             </div>
           )}
-          {}
+
           {data.correctAnswer && (
             <div>
               <h5 className="block text-sm font-medium text-gray-700 ">
                 Correct answer:
               </h5>
               <div dangerouslySetInnerHTML={{ __html: data.correctAnswer }} />
-              {}
+
               {data.showCorrectAnswerDescription &&
                 data.correctAnswerDescription && (
                   <div className="mt-3">
@@ -777,8 +753,8 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
             : null;
         case QuestionMode.SUBJECTIVE:
         case QuestionMode.OBJECTIVE:
-          return question.baseData
-            ? renderStandardSubQuestion(question.baseData)
+          return question.subjectiveData
+            ? renderStandardSubQuestion(question.subjectiveData)
             : null;
         default:
           return null;
@@ -788,13 +764,37 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
       question: QuestionGroupData["questions"][0],
       index: number
     ) => {
+      const getQuestionTitle = () => {
+        switch (question.type) {
+          case QuestionMode.FILL_IN_BLANK:
+            return (
+              question.fillInBlankData?.sentence || "Fill in blank question"
+            );
+          case QuestionMode.ARRANGING:
+            return question.arrangementData?.sentence || "Arrangement question";
+          case QuestionMode.MULTIPLE_CHOICE:
+            return (
+              question.multipleChoiceData?.questionTitle ||
+              "Multiple choice question"
+            );
+          case QuestionMode.SUBJECTIVE:
+          case QuestionMode.OBJECTIVE:
+            return question.subjectiveData?.questionTitle || "Question";
+          default:
+            return "Question";
+        }
+      };
+
+      const questionTitle = getQuestionTitle();
+
       return (
         <div key={question.id} className="border-l-4 border-blue-200 pl-4">
-          <div className="flex items-center space-x-2 mb-3">
-            <span className="text-sm font-medium text-blue-600">
-              {index + 1}.
-            </span>
-            <span className="text-sm text-gray-500">{question.title}</span>
+          <div className="flex items-start space-x-2 mb-3">
+            <span className=" font-bold flex-shrink-0">{index + 1}.</span>
+            <div
+              className="font-bold flex-1"
+              dangerouslySetInnerHTML={{ __html: questionTitle }}
+            />
           </div>
           <div className="space-y-3">{renderSubQuestionPreview(question)}</div>
         </div>
@@ -802,7 +802,6 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
     };
     return (
       <div className="space-y-6">
-        {}
         <div className="space-y-2">
           <h2 className="text-lg font-semibold text-gray-900">
             {questionGroupData.groupTitle ? (
@@ -826,7 +825,7 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
               </div>
             )}
         </div>
-        {}
+
         {questionGroupData.questions &&
         questionGroupData.questions.length > 0 ? (
           <div className="space-y-8">
@@ -843,16 +842,21 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
     );
   };
   const renderStandardPreview = () => {
+    const isLeftToRight = baseData.isLeftToRight || false;
+
     return (
       <div className="space-y-4">
-        {}
         {baseData.questionTitle && (
-          <div>
-            <h3 dangerouslySetInnerHTML={{ __html: baseData.questionTitle }} />
-            {}
+          <div className={`${isLeftToRight ? "flex gap-6" : "space-y-3"}`}>
+            <div className={`${isLeftToRight ? "flex-1" : ""}`}>
+              <h3
+                dangerouslySetInnerHTML={{ __html: baseData.questionTitle }}
+              />
+            </div>
+
             {baseData.showQuestionDescription &&
               baseData.questionDescription && (
-                <div className="mt-3">
+                <div className={`${isLeftToRight ? "flex-1" : "mt-3"}`}>
                   <label className="block text-sm font-medium text-gray-700 ">
                     Description for question:
                   </label>
@@ -865,14 +869,14 @@ export const QuestionPreview: React.FC<QuestionPreviewProps> = ({
               )}
           </div>
         )}
-        {}
+
         {baseData.correctAnswer && (
           <div>
             <label className="block text-sm font-medium text-gray-700 ">
               Correct answer:
             </label>
             <div dangerouslySetInnerHTML={{ __html: baseData.correctAnswer }} />
-            {}
+
             {baseData.showCorrectAnswerDescription &&
               baseData.correctAnswerDescription && (
                 <div className="mt-3">
